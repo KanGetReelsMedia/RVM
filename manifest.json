@@ -1,0 +1,16 @@
+{
+  "short_name": "Metro Hub",
+  "name": "River Valley Metro Hub",
+  "icons": [
+    {
+      "src": "https://storage.googleapis.com/token-transit.appspot.com/m-D9SrnA2icgetpHoaoGGkYOoocD6_1Tb5mhqFDprLU--logo.rivervalleymetro.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/index.html",
+  "background_color": "#000000",
+  "theme_color": "#3b82f6",
+  "display": "standalone",
+  "orientation": "portrait"
+}
