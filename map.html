@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+  <title>RVM Digital Schedule</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f172a; margin: 0; padding: 0; overflow: hidden; height: 100vh; }
+    
+    .app-container { width: 100vw; height: 100vh; max-width: 430px; background: #f8fafc; margin: 0 auto; position: relative; overflow: hidden; display: flex; flex-direction: column; }
+    
+    /* Side Menu Styles */
+    #sideMenu {
+      position: absolute; top: 0; left: -100%; width: 80%; height: 100%;
+      background: #0f172a; z-index: 20000; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column; padding: 60px 30px;
+    }
+    #sideMenu.open { transform: translateX(100%); }
+    .menu-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; visibility: hidden; z-index: 15000; transition: 0.3s; }
+    .menu-overlay.show { opacity: 1; visibility: visible; }
+    
+    .menu-link { 
+        display: flex; align-items: center; gap: 12px;
+        color: #94a3b8; font-size: 1.1rem; font-weight: 700; 
+        margin-bottom: 1.5rem; transition: 0.2s; 
+    }
+    .menu-link.active { color: white; }
+    .menu-link svg { width: 20px; height: 20px; opacity: 0.7; }
+    .menu-link.active svg { opacity: 1; color: #0ea5e9; }
+
+    /* Hamburger Icon */
+    .burger-line { width: 24px; height: 2px; background: #0f172a; margin: 5px 0; border-radius: 2px; transition: 0.3s; }
+
+    /* Drawer Styles */
+    .drawer { position: absolute; bottom: 0; left: 0; right: 0; background: white; border-radius: 30px 30px 0 0; z-index: 50; transform: translateY(calc(100% - 70px)); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); max-height: 75vh; display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); }
+    .drawer.open { transform: translateY(0) !important; }
+    .drawer-handle { height: 70px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: white; border-radius: 30px 30px 0 0; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+    .scroll-hide::-webkit-scrollbar { display: none; }
+    
+    .support-card { background: white; border: 1px solid #fee2e2; border-left: 4px solid #ef4444; }
+
+    /* Toggle Styles */
+    .dir-toggle-container { display: none; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 12px 20px; border-radius: 24px; margin-bottom: 24px; }
+    #dir-checkbox { display: none; }
+    .toggle-label-svg { cursor: pointer; background: white; border-radius: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 2px solid #e2e8f0; display: block; }
+    .toggle-label-svg rect { fill: #cbd5e1; transition: all 0.5s cubic-bezier(0.65, 0, 0.35, 1); transform-box: fill-box; transform-origin: center; }
+    #dir-checkbox:checked + .toggle-label-svg rect { fill: #0ea5e9; transform: translateX(65px) rotate(180deg); }
+    .dir-text { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+    .dir-text.active { color: #0ea5e9; }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
+    <div id="sideMenu">
+        <p class="text-sky-500 font-black text-[10px] uppercase tracking-[0.3em] mb-12">RVM Navigation</p>
+        
+        <a href="./index.html" class="menu-link active">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
+            Schedule
+        </a>
+        <a href="./map.html" class="menu-link">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            Find My Bus
+        </a>
+        <a href="./status.html" class="menu-link">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            Service Alerts
+        </a>
+        <a href="./passes.html" class="menu-link">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" /></svg>
+            RVM Passes
+        </a>
+        <a href="./weather.html" class="menu-link">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+            Weather
+        </a>
+
+        <div class="mt-auto border-t border-white/5 pt-6">
+            <p class="text-slate-500 text-[10px] font-black uppercase tracking-widest">RVM Digital v2.1</p>
+        </div>
+    </div>
+
+    <div class="flex-1 overflow-y-auto p-6 pb-32 scroll-hide">
+      <div class="flex justify-between items-start pt-4 mb-6">
+        <div>
+          <h1 class="text-2xl font-extrabold text-slate-900 leading-tight">River Valley Metro</h1>
+          <p class="text-sky-500 font-bold text-xs uppercase tracking-widest">Digital Schedule</p>
+        </div>
+        <button onclick="toggleMenu()" class="p-2 -mr-2 outline-none">
+          <div class="burger-line"></div>
+          <div class="burger-line" style="width: 16px;"></div>
+          <div class="burger-line"></div>
+        </button>
+      </div>
+
+      <input type="text" id="destSearch" onkeyup="searchDest()" placeholder="Search stops..." class="w-full bg-white border border-slate-200 p-4 rounded-2xl mb-4 shadow-sm outline-none text-slate-700">
+
+      <select id="routeSelect" onchange="initRoute()" class="w-full bg-white border border-slate-200 p-4 rounded-2xl mb-6 font-bold text-slate-700 shadow-sm outline-none">
+        <option value="">-- Select Route --</option>
+        <option value="1">Route 1 - Meadowview</option>
+        <option value="2">Route 2 - Mall / Walmart</option>
+        <option value="3">Route 3 - Target / Bradley</option>
+        <option value="4">Route 4 - East Court Village</option>
+        <option value="5">Route 5 - Aroma Park</option>
+        <option value="6">Route 6 - KCC (M-F)</option>
+        <option value="7NP">Route 7 - Non-Peak</option>
+        <option value="7P">Route 7 - Peak Service</option>
+        <option value="8">Route 8 - KHS / Jewel</option>
+        <option value="9">Route 9 - Manteno</option>
+        <option value="10">Route 10 - Bourbonnais</option>
+        <option value="11">Route 11 - ONU / Mall</option>
+        <option value="12">Route 12 - Meijer / Perry Farm</option>
+        <option value="14">Route 14 - Merchant St</option>
+      </select>
+
+      <div id="route4Toggle" class="dir-toggle-container">
+        <span id="textEast" class="dir-text active">Eastbound</span>
+        <input type="checkbox" id="dir-checkbox" onchange="handleToggleChange(this)">
+        <label for="dir-checkbox" class="toggle-label-svg">
+          <svg height="36" width="100" viewBox="0 0 100 36">
+            <g><rect x="6" y="6" width="2" height="24" /><rect x="10" y="6" width="2" height="24" /><rect x="14" y="6" width="2" height="24" /><rect x="18" y="6" width="2" height="24" /><rect x="22" y="6" width="2" height="24" /><rect x="26" y="6" width="2" height="24" /></g>
+          </svg>
+        </label>
+        <span id="textWest" class="dir-text">Westbound</span>
+      </div>
+
+      <div id="etaDisplay" style="display:none;" class="bg-slate-900 rounded-[32px] p-8 text-white shadow-2xl mb-6">
+        <p class="text-sky-400 font-extrabold text-xs uppercase mb-2" id="dirLabel">Scheduled Arrival</p>
+        <h2 id="stopName" class="text-2xl font-extrabold mb-6">--</h2>
+        <div class="flex items-baseline gap-2 mb-6">
+          <span id="bigTime" class="text-6xl font-black tracking-tighter">--:--</span>
+          <span id="ampm" class="text-xl font-bold opacity-40">--</span>
+        </div>
+        <div id="badge" class="inline-flex items-center gap-2 bg-sky-500/20 text-sky-400 px-4 py-2 rounded-full border border-sky-500/30">
+          <span id="minsAway" class="text-sm font-extrabold uppercase">Calculating...</span>
+        </div>
+      </div>
+
+      <div class="support-card p-4 rounded-2xl shadow-sm mb-12">
+        <p class="text-[10px] font-black text-red-500 uppercase tracking-tighter mb-1">Bus Running Late?</p>
+        <a href="tel:8159374287" class="text-slate-900 font-extrabold text-sm block">Call Dispatch: 815-937-4287</a>
+      </div>
+    </div>
+
+    <div id="drawer" class="drawer">
+      <div class="drawer-handle" onclick="toggleDrawer()">
+        <div class="w-12 h-1.5 bg-slate-200 rounded-full mb-2"></div>
+        <span class="text-slate-900 font-bold text-xs uppercase tracking-widest">Tap for Full List</span>
+      </div>
+      <div id="fullSchedList" class="flex-1 overflow-y-auto px-6 pb-12 space-y-3 scroll-hide bg-slate-50"></div>
+    </div>
+  </div>
+
+  <script>
+    function toggleMenu() {
+        document.getElementById('sideMenu').classList.toggle('open');
+        document.getElementById('menuOverlay').classList.toggle('show');
+    }
+
+    let currentDir = 'east';
+    const routeData = {
+      "1": { startH: 5, endH: 21, wk: true, stops: [["Family Dollar", 5], ["Azzarelli Apts", 8], ["St. Mary's", 15], ["Walgreens Court", 19], ["Metro Centre", 25], ["Family Dollar", 35], ["Azzarelli Apts", 38], ["St. Mary's", 45], ["Walgreens Court", 49], ["Metro Centre", 55]] },
+      "2": { startH: 5, endH: 21, wk: true, stops: [["Meijer (NB)", 7], ["Walmart", 14], ["Signature/Jack", 19], ["Northfield Mall", 25], ["Mall (Dep)", 30], ["Signature/Jack", 33], ["Adventure Church", 38], ["Meijer (SB)", 45], ["Broadway Shelter", 51], ["Village Hall", 58]] },
+      "3": { startH: 5, endH: 21, wk: true, stops: [["Metro Centre", 0], ["Bradley Library", 6], ["Christine/Leo", 13], ["Target", 20], ["Northfield Mall", 30], ["Target (Ret)", 32], ["Christine (Meijer)", 39], ["Village Square", 44], ["KCTC", 49]] },
+      "4": { startH: 5, endH: 21, wk: false, 
+             east: [["East Court Village", 7], ["Frontage Road", 13], ["Spruce/Fairmont", 15], ["Family Dollar", 18], ["Metro Centre", 30], ["East Court Village", 37], ["Frontage Road", 43], ["Spruce/Fairmont", 45], ["Family Dollar", 48], ["Metro Centre", 0]],
+             west: [["West - St. Mary's", 33], ["West - Riverside Med", 40], ["West - Health Dept", 45], ["Metro Centre", 0], ["West - St. Mary's", 3], ["West - Riverside Med", 10], ["West - Health Dept", 15], ["Metro Centre", 30]] 
+      },
+      "5": { startH: 5, endH: 21, wk: true, stops: [["Aroma Park Shelter", 30], ["Crestview", 35], ["Riverside East", 38], ["Maple/Eagle", 41], ["Eagle/Chicago", 46], ["Metro Centre", 0], ["Eagle/Chicago", 6], ["Dollar General", 13], ["Crestview", 16]] },
+      "6": { startH: 7, startM: 30, endH: 17, wk: false, stops: [["Metro Centre", 30], ["Kankakee Estates", 36], ["K.C.C", 41], ["Del Monte", 46], ["Walmart", 58], ["Jerome Combs", 8], ["Schuyler/River", 18]] },
+      "7NP": { startH: 5, endH: 21, wk: true, stops: [["Metro Centre", 0], ["Kankakee Estates", 6], ["Del Monte", 8], ["K.C.C.", 16], ["Walmart Kankakee", 22], ["Jerome Covers", 29], ["Love's", 34], ["Walmart Kankakee", 40], ["Harrison/Station", 48]] },
+      "7P": { startH: 5, endH: 21, wk: true, stops: [["Metro Centre", 0], ["Kankakee Estates", 6], ["K.C.C", 11], ["Walmart Kankakee", 15], ["Harrison/Station", 22], ["Metro Centre", 30], ["Kankakee Estates", 36], ["Walmart Kankakee", 42], ["Harrison/Station", 49]] },
+      "8": { startH: 5, endH: 21, wk: true, stops: [["Metro Centre", 0], ["Washington/Water", 3], ["Casey's (Jeffery)", 8], ["Merchant/Curtis", 12], ["KHS", 15], ["Jewel (Wash)", 19], ["Metro Centre", 30], ["Mulberry/Chicago", 33], ["Hobbie/Willow", 36], ["Broadway/Jeff", 42], ["Brookmont/Harvard", 48]] },
+      "9": { startH: 5, endH: 21, wk: true, stops: [["Manteno Metro", 0], ["ABC Supply", 7], ["Northfield Mall", 30], ["Walmart", 33], ["Manteno Metro", 41], ["E. 2nd St", 45], ["Veterans' Home", 52]] },
+      "10": { startH: 5, endH: 21, wk: true, stops: [["Brown Blvd", 0], ["Casey's", 5], ["Riverside Campus", 7], ["Bourbonnais Metro", 13], ["Northfield Mall", 30], ["Casey's", 34], ["Riverside Campus", 36], ["Bourbonnais Metro", 42], ["W. Bethel Dr", 50], ["Almar Parkway", 55]] },
+      "11": { startH: 5, endH: 21, wk: true, stops: [["Metro Centre", 0], ["McDonald's (5th)", 4], ["ONU", 11], ["Northfield Meadows", 18], ["Northfield Mall", 30], ["Kroger", 36], ["ONU", 42], ["Walgreens Kennedy", 48]] },
+      "12": { startH: 5, endH: 21, wk: true, stops: [["Metro Centre", 30], ["McDonald's (5th)", 34], ["Shine FM", 39], ["Meijer", 47], ["Kroger", 55], ["Brown Blvd", 2], ["Heritage/Convent", 11], ["Perry Farm", 16], ["Walgreen's", 19], ["Metro Centre", 25]] },
+      "14": { startH: 5, endH: 21, wk: true, stops: [["Metro Centre", 0], ["Mulberry/Chicago", 2], ["Fairmont/Court", 9], ["Eagle/Maple", 13], ["Harrison/Station", 20], ["Metro Centre", 30], ["Station/Schuyler", 33], ["Mercy Housing", 37], ["Merchant/Curtis", 41], ["KHS", 45], ["Kankakee Jewel", 49]] }
+    };
+
+    function initRoute() {
+      const rid = document.getElementById('routeSelect').value;
+      if(!rid) return;
+      document.getElementById('route4Toggle').style.display = (rid === "4") ? "flex" : "none";
+      document.getElementById('etaDisplay').style.display = 'block';
+      updateLiveETA();
+      buildFullSchedule();
+    }
+
+    function handleToggleChange(checkbox) {
+      const dir = checkbox.checked ? 'west' : 'east';
+      document.getElementById('textEast').classList.toggle('active', !checkbox.checked);
+      document.getElementById('textWest').classList.toggle('active', checkbox.checked);
+      setDir(dir);
+    }
+
+    function setDir(dir) {
+      currentDir = dir;
+      updateLiveETA();
+      buildFullSchedule();
+    }
+
+    function updateLiveETA() {
+      const rid = document.getElementById('routeSelect').value;
+      const now = new Date();
+      const curH = now.getHours();
+      const curM = now.getMinutes();
+      const route = routeData[rid];
+      if (curH < (route.startH || 5) || curH >= route.endH) {
+        document.getElementById('stopName').innerText = "Service Offline";
+        return;
+      }
+      let activeStops = (rid === "4") ? route[currentDir] : route.stops;
+      const sorted = [...activeStops].sort((a,b) => a[1] - b[1]);
+      let next = sorted.find(s => s[1] >= curM) || sorted[0];
+      let h = (sorted.find(s => s[1] >= curM)) ? curH : curH + 1;
+      document.getElementById('dirLabel').innerText = (rid === "4") ? `${currentDir.toUpperCase()}BOUND ARRIVAL` : "SCHEDULED ARRIVAL";
+      document.getElementById('stopName').innerText = next[0];
+      document.getElementById('bigTime').innerText = `${h % 12 || 12}:${next[1].toString().padStart(2, '0')}`;
+      document.getElementById('ampm').innerText = h >= 12 ? 'PM' : 'AM';
+      const diff = (h > curH) ? (60 - curM + next[1]) : (next[1] - curM);
+      document.getElementById('minsAway').innerText = diff === 0 ? "AT STOP" : "IN " + diff + " MINS";
+    }
+
+    function buildFullSchedule() {
+      const rid = document.getElementById('routeSelect').value;
+      const route = routeData[rid];
+      let html = "";
+      let activeStops = (rid === "4") ? route[currentDir] : route.stops;
+      for(let h = (route.startH || 5); h < route.endH; h++) {
+        activeStops.sort((a,b) => a[1] - b[1]).forEach(s => {
+          html += `<div class="flex justify-between p-4 bg-white rounded-xl border border-slate-100 shadow-sm"><span class="font-bold text-slate-800 text-sm">${s[0]}</span><span class="font-extrabold text-sky-600 text-xs">${h % 12 || 12}:${s[1].toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}</span></div>`;
+        });
+      }
+      document.getElementById('fullSchedList').innerHTML = html;
+    }
+
+    function toggleDrawer() { document.getElementById('drawer').classList.toggle('open'); }
+    
+    function searchDest() {
+      const q = document.getElementById('destSearch').value.toLowerCase();
+      if(q.length < 3) return;
+      for (let id in routeData) {
+        const stops = id === "4" ? [...routeData[id].east, ...routeData[id].west] : routeData[id].stops;
+        if (stops.some(s => s[0].toLowerCase().includes(q))) {
+          document.getElementById('routeSelect').value = id;
+          initRoute();
+          break;
+        }
+      }
+    }
+    setInterval(() => { if(document.getElementById('routeSelect').value) updateLiveETA(); }, 60000);
+  </script>
+</body>
+</html>
