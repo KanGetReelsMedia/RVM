@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Metro Weather | 3-Day Forecast</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #000; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            color: white;
+        }
+
+        /* WebGL Background Layer */
+        #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+        /* --- Hamburger Side Menu --- */
+        #sideMenu {
+            position: fixed; top: 0; left: -100%; width: 80%; height: 100%;
+            background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(30px);
+            z-index: 20000; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; padding: 80px 40px;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        #sideMenu.open { transform: translateX(100%); }
+        .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; visibility: hidden; z-index: 15000; transition: 0.4s; }
+        .menu-overlay.show { opacity: 1; visibility: visible; }
+        .menu-link-item { font-size: 1.5rem; font-weight: 800; color: #94a3b8; margin-bottom: 2rem; display: block; transition: 0.3s; text-decoration: none; }
+        .menu-link-item.active { color: white; }
+
+        /* Burger Button */
+        .burger-btn { position: fixed; top: 24px; right: 24px; z-index: 16000; padding: 12px; border-radius: 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .burger-line { width: 22px; height: 2px; background: white; margin: 5px 0; border-radius: 2px; transition: 0.3s; }
+
+        .app-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: 430px; 
+            max-height: 932px; 
+            z-index: 10;
+            overflow-y: auto; 
+            scrollbar-width: none;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        }
+
+        .app-container::-webkit-scrollbar { display: none; }
+
+        /* Premium Glass Components */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 2.5rem;
+        }
+
+        .glow-text {
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Weather Particle Layer */
+        #animation-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            top: -50px;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            to { transform: translateY(100vh); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+
+<body>
+
+<canvas id="canvas"></canvas>
+
+<button class="burger-btn" onclick="toggleMenu()">
+    <div class="burger-line"></div>
+    <div class="burger-line" style="width: 14px;"></div>
+    <div class="burger-line"></div>
+</button>
+
+<div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
+<div id="sideMenu">
+    <p class="text-blue-500 font-black text-[10px] uppercase tracking-[0.4em] mb-12">RVM Navigation</p>
+    <a href="index.html" class="menu-link-item">Home</a>
+    <a href="schedule.html" class="menu-link-item">Midway Commuter</a>
+    <a href="map.html" class="menu-link-item">Live Tracking</a>
+    <a href="status.html" class="menu-link-item">Service Alerts</a>
+    <a href="passes.html" class="menu-link-item">Purchase Pass</a>
+    <a href="weather.html" class="menu-link-item active">Weather</a>
+    
+    <div class="mt-auto pt-8 border-t border-white/5">
+        <p class="text-white/20 text-[10px] font-bold uppercase tracking-widest">RVM Weather Services</p>
+    </div>
+</div>
+
+<div class="app-container">
+    <div id="animation-layer"></div>
+
+    <header class="pt-12 pb-8 px-6 text-center sticky top-0 z-20 backdrop-blur-md bg-black/10">
+        <h1 class="text-2xl font-black glow-text tracking-tight uppercase">River Valley Metro</h1>
+        <div class="mt-1 text-blue-500 text-[10px] font-black uppercase tracking-[0.4em]">Weather Outlook</div>
+    </header>
+
+    <div class="p-6 space-y-6 relative z-10">
+        
+        <div class="glass-card p-8 shadow-2xl text-center border-white/10">
+            <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 block">Currently</span>
+            <h2 id="weather-desc" class="text-3xl font-black text-white mb-4 uppercase tracking-tight">Loading...</h2>
+            
+            <div class="flex justify-center items-baseline gap-2 mb-6">
+                <span id="temp-val" class="text-6xl font-black glow-text">--</span>
+                <span class="text-blue-400 font-bold text-xl">°F</span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white/5 p-4 rounded-3xl border border-white/5">
+                    <span class="block text-[9px] font-bold text-white/40 uppercase tracking-wider mb-1">Wind Speed</span>
+                    <span id="wind-val" class="text-sm font-black text-white/90">-- mph</span>
+                </div>
+                <div class="bg-white/5 p-4 rounded-3xl border border-white/5">
+                    <span class="block text-[9px] font-bold text-white/40 uppercase tracking-wider mb-1">Humidity</span>
+                    <span id="hum-val" class="text-sm font-black text-white/90">--%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="space-y-4" id="forecast-list"></div>
+
+        <button onclick="fetchWeather()" class="w-full bg-white text-black py-5 rounded-[2rem] font-black shadow-xl active:scale-95 transition-all flex items-center justify-center gap-3 mt-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" ></path>
+            </svg>
+            REFRESH FORECAST
+        </button>
+
+        <div class="h-10"></div>
+    </div>
+</div>
+
+<script id="vertexShader" type="x-shader/x-vertex">
+    attribute vec2 position;
+    void main() { gl_Position = vec4(position, 0.0, 1.0); }
+</script>
+<script id="fragmentShader" type="x-shader/x-fragment">
+    precision highp float;
+    uniform float uTime;
+    uniform vec2 uResolution;
+    void main() {
+        vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / min(uResolution.x, uResolution.y);
+        float t = uTime * 0.1;
+        vec3 col = vec3(0.0);
+        for(float i = 1.0; i < 4.0; i++) {
+            uv.x += 0.4 / i * sin(i * 3.0 * uv.y + t);
+            uv.y += 0.4 / i * cos(i * 3.0 * uv.x + t);
+            col += 0.005 / abs(sin(t + uv.y + uv.x));
+        }
+        gl_FragColor = vec4(col * vec3(0.1, 0.35, 0.75), 1.0);
+    }
+</script>
+
+<script>
+    // Menu Control
+    function toggleMenu() {
+        document.getElementById('sideMenu').classList.toggle('open');
+        document.getElementById('menuOverlay').classList.toggle('show');
+    }
+
+    // Background WebGL Engine
+    const canvas = document.getElementById('canvas');
+    const gl = canvas.getContext('webgl');
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const program = gl.createProgram();
+    const vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, document.getElementById('vertexShader').textContent);
+    gl.compileShader(vs);
+    const fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, document.getElementById('fragmentShader').textContent);
+    gl.compileShader(fs);
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    const posLoc = gl.getAttribLocation(program, 'position');
+    const uTime = gl.getUniformLocation(program, 'uTime');
+    const uRes = gl.getUniformLocation(program, 'uResolution');
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+    function renderBG(t) {
+      gl.useProgram(program);
+      gl.uniform1f(uTime, t * 0.001);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      requestAnimationFrame(renderBG);
+    }
+    requestAnimationFrame(renderBG);
+
+    // Weather Logic
+    const weatherCodes = {
+        0: "Clear Sky", 1: "Mainly Clear", 2: "Partly Cloudy", 3: "Overcast",
+        45: "Foggy", 51: "Drizzle", 61: "Rain", 71: "Snow", 95: "Thunderstorm"
+    };
+
+    async function fetchWeather() {
+        try {
+            const url = "https://api.open-meteo.com/v1/forecast?latitude=41.1201&longitude=-87.8612&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=America/Chicago";
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            const current = data.current;
+            document.getElementById("weather-desc").textContent = weatherCodes[current.weather_code] || "Fair";
+            document.getElementById("temp-val").textContent = Math.round(current.temperature_2m);
+            document.getElementById("wind-val").textContent = `${Math.round(current.wind_speed_10m)} mph`;
+            document.getElementById("hum-val").textContent = `${current.relative_humidity_2m}%`;
+
+            renderForecast(data.daily);
+            renderVisuals(current.weather_code);
+        } catch (e) {
+            console.error("Weather failed:", e);
+            document.getElementById("weather-desc").textContent = "Update Error";
+        }
+    }
+
+    function renderForecast(daily) {
+        const list = document.getElementById("forecast-list");
+        list.innerHTML = ""; 
+
+        for(let i=0; i<3; i++) {
+            const date = new Date(daily.time[i] + "T00:00");
+            const dayName = i === 0 ? "Today" : date.toLocaleDateString('en-US', { weekday: 'long' });
+            const high = Math.round(daily.temperature_2m_max[i]);
+            const low = Math.round(daily.temperature_2m_min[i]);
+            const condition = weatherCodes[daily.weather_code[i]] || "Fair";
+
+            const card = document.createElement("div");
+            card.className = "glass-card p-6 flex justify-between items-center fade-in border-white/5 shadow-lg";
+            card.style.animationDelay = `${i * 0.1}s`;
+            card.innerHTML = `
+                <div>
+                    <span class="block text-[9px] font-black text-white/40 uppercase tracking-widest">${dayName}</span>
+                    <span class="font-extrabold text-white/90">${condition}</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-xl font-black text-white">${high}°</span>
+                    <span class="text-sm font-bold text-white/30 ml-1">${low}°</span>
+                </div>
+            `;
+            list.appendChild(card);
+        }
+    }
+
+    function renderVisuals(code) {
+        const layer = document.getElementById("animation-layer");
+        layer.innerHTML = "";
+        
+        if (code >= 61) { 
+            const char = code >= 71 ? "❄️" : "💧";
+            for(let i=0; i<25; i++) {
+                const p = document.createElement("div");
+                p.className = "particle";
+                p.textContent = char;
+                p.style.left = Math.random() * 100 + "vw";
+                p.style.animationDuration = (Math.random() * 2 + 1.5) + "s";
+                p.style.opacity = Math.random() * 0.5 + 0.2;
+                p.style.fontSize = "12px";
+                layer.appendChild(p);
+            }
+        }
+    }
+
+    fetchWeather();
+</script>
+</body>
+</html>
