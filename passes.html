@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Buy Your Bus Pass | River Valley Metro</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background: #000; 
+      overflow: hidden; 
+      height: 100vh; 
+      color: white; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+    }
+
+    /* WebGL Background Layer */
+    #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+    /* --- Hamburger Side Menu --- */
+    #sideMenu {
+      position: fixed; top: 0; left: -100%; width: 80%; height: 100%;
+      background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(30px);
+      z-index: 20000; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column; padding: 80px 40px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    #sideMenu.open { transform: translateX(100%); }
+    .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; visibility: hidden; z-index: 15000; transition: 0.4s; }
+    .menu-overlay.show { opacity: 1; visibility: visible; }
+    .menu-link-item { font-size: 1.5rem; font-weight: 800; color: #94a3b8; margin-bottom: 2rem; display: block; transition: 0.3s; }
+    .menu-link-item.active { color: white; }
+
+    /* Burger Button */
+    .burger-btn { position: fixed; top: 24px; right: 24px; z-index: 16000; padding: 12px; border-radius: 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+    .burger-line { width: 22px; height: 2px; background: white; margin: 5px 0; border-radius: 2px; transition: 0.3s; }
+
+    /* App Container */
+    .app-container { 
+      position: relative; 
+      width: 100vw; 
+      height: 100vh; 
+      max-width: 430px; 
+      max-height: 932px;
+      z-index: 10; 
+      overflow-y: auto; 
+      scrollbar-width: none;
+      background: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .app-container::-webkit-scrollbar { display: none; }
+
+    /* Glass Effect */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 3rem;
+    }
+
+    .glow-text {
+      background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Bus Animations */
+    .float-animate { 
+      animation: float 5s ease-in-out infinite; 
+      cursor: pointer;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-15px); }
+    }
+
+    .bus-active {
+      animation: wild-ride 1.2s linear infinite !important;
+    }
+
+    @keyframes wild-ride {
+      0% { transform: translate(0, 0) rotate(0deg) rotateY(0deg); }
+      25% { transform: translate(15px, -20px) rotate(15deg) rotateY(90deg); }
+      50% { transform: translate(0, 10px) rotate(0deg) rotateY(180deg); }
+      75% { transform: translate(-15px, -20px) rotate(-15deg) rotateY(270deg); }
+      100% { transform: translate(0, 0) rotate(0deg) rotateY(360deg); }
+    }
+
+    /* Button Styling */
+    .cta-button {
+      background: #ffde00;
+      box-shadow: 0 10px 40px -10px rgba(255, 222, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .cta-button:active { transform: scale(0.95); }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas"></canvas>
+
+  <button class="burger-btn" onclick="toggleMenu()">
+    <div class="burger-line"></div>
+    <div class="burger-line" style="width: 14px;"></div>
+    <div class="burger-line"></div>
+  </button>
+
+  <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
+  <div id="sideMenu">
+    <p class="text-blue-500 font-black text-[10px] uppercase tracking-[0.4em] mb-12">RVM Navigation</p>
+    <a href="index.html" class="menu-link-item">Home</a>
+    <a href="schedule.html" class="menu-link-item">Digital Times</a>
+    <a href="map.html" class="menu-link-item">Live Tracking</a>
+    <a href="status.html" class="menu-link-item">Service Alerts</a>
+    <a href="passes.html" class="menu-link-item active">Purchase Pass</a>
+    <a href="weather.html" class="menu-link-item">Weather</a>
+    
+    <div class="mt-auto pt-8 border-t border-white/5">
+        <p class="text-white/20 text-[10px] font-bold uppercase tracking-widest">RVM Premium</p>
+    </div>
+  </div>
+
+  <div class="app-container">
+    <main class="flex flex-col items-center text-center p-8 pt-16 space-y-12">
+      
+      <div id="bus-container" onclick="this.classList.toggle('bus-active')" class="float-animate w-full px-4">
+        <img src="https://i.postimg.cc/5NnbyZ9r/1000024794-removebg-preview.png" 
+             alt="Metro Bus" 
+             class="w-full max-w-[280px] h-auto drop-shadow-[0_30px_30px_rgba(0,0,0,0.5)] mx-auto">
+      </div>
+
+      <header class="space-y-4">
+        <p class="text-blue-400 text-[10px] font-black uppercase tracking-[0.4em] italic">
+          Go where you want to go
+        </p>
+        <h1 class="text-5xl font-extrabold glow-text tracking-tighter leading-none uppercase">
+          River Valley<br><span class="text-[#ffde00]">Metro</span>
+        </h1>
+        <p class="text-white/70 text-sm font-medium px-4 leading-relaxed">
+          Fast. Simple. Secure. Purchase your pass through <strong>Token Transit</strong>.
+        </p>
+      </header>
+
+      <div class="glass-card w-full p-8 shadow-2xl">
+        <a class="cta-button flex items-center justify-center gap-3 w-full py-6 px-4 text-black font-black text-xl uppercase tracking-tighter rounded-3xl"
+           href="https://tokentransit.com/app?a=rivervalleymetro&utm_medium=web&utm_source=web&hint=purchase"
+           target="_blank" 
+           rel="noopener noreferrer">
+           
+           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+             <path stroke-linecap="round" stroke-linejoin="round" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" ></path>
+           </svg>
+           
+           <span>Buy Pass Now</span>
+        </a>
+        <p class="mt-4 text-[9px] text-white/30 uppercase font-bold tracking-widest">Immediate Digital Delivery</p>
+      </div>
+      
+      <footer>
+         <div class="flex items-center gap-3 bg-white/5 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 shadow-xl">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            <p class="text-white/60 text-[9px] font-black uppercase tracking-[0.2em]">
+              Official Transit Partner
+            </p>
+         </div>
+      </footer>
+
+    </main>
+  </div>
+
+  <script id="vertexShader" type="x-shader/x-vertex">
+    attribute vec2 position;
+    void main() { gl_Position = vec4(position, 0.0, 1.0); }
+  </script>
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    precision highp float;
+    uniform float uTime;
+    uniform vec2 uResolution;
+    void main() {
+        vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / min(uResolution.x, uResolution.y);
+        float t = uTime * 0.15;
+        vec3 col = vec3(0.0);
+        for(float i = 1.0; i < 4.0; i++) {
+            uv.x += 0.3 / i * sin(i * 3.0 * uv.y + t);
+            uv.y += 0.3 / i * cos(i * 3.0 * uv.x + t);
+            col += 0.005 / abs(sin(t + uv.y + uv.x));
+        }
+        gl_FragColor = vec4(col * vec3(0.1, 0.4, 0.8), 1.0);
+    }
+  </script>
+
+  <script>
+    // Menu Control
+    function toggleMenu() {
+        document.getElementById('sideMenu').classList.toggle('open');
+        document.getElementById('menuOverlay').classList.toggle('show');
+    }
+
+    // Background Engine
+    const canvas = document.getElementById('canvas');
+    const gl = canvas.getContext('webgl');
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const program = gl.createProgram();
+    const vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, document.getElementById('vertexShader').textContent);
+    gl.compileShader(vs);
+    const fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, document.getElementById('fragmentShader').textContent);
+    gl.compileShader(fs);
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    const posLoc = gl.getAttribLocation(program, 'position');
+    const uTime = gl.getUniformLocation(program, 'uTime');
+    const uRes = gl.getUniformLocation(program, 'uResolution');
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+    function render(t) {
+      gl.useProgram(program);
+      gl.uniform1f(uTime, t * 0.001);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      requestAnimationFrame(render);
+    }
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>
