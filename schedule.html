@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Midway Commuter | River Valley Metro</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background: #000; 
+      overflow: hidden; 
+      height: 100vh; 
+      color: white; 
+      display: flex; 
+      justify-content: center; 
+      align-items: center; 
+    }
+
+    /* WebGL Background Layer */
+    #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+
+    /* --- Hamburger Side Menu --- */
+    #sideMenu {
+      position: fixed; top: 0; left: -100%; width: 80%; height: 100%;
+      background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(30px);
+      z-index: 20000; transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex; flex-direction: column; padding: 80px 40px;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    #sideMenu.open { transform: translateX(100%); }
+    .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; visibility: hidden; z-index: 15000; transition: 0.4s; }
+    .menu-overlay.show { opacity: 1; visibility: visible; }
+    .menu-link-item { font-size: 1.5rem; font-weight: 800; color: #94a3b8; margin-bottom: 2rem; display: block; transition: 0.3s; text-decoration: none; }
+    .menu-link-item.active { color: white; }
+
+    /* Burger Button */
+    .burger-btn { position: fixed; top: 24px; right: 24px; z-index: 16000; padding: 12px; border-radius: 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+    .burger-line { width: 22px; height: 2px; background: white; margin: 5px 0; border-radius: 2px; transition: 0.3s; }
+
+    /* App Container */
+    .app-container { 
+      position: relative; 
+      width: 100vw; 
+      height: 100vh; 
+      max-width: 430px; 
+      max-height: 932px;
+      z-index: 10; 
+      overflow-y: auto; 
+      scrollbar-width: none;
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+    }
+    .app-container::-webkit-scrollbar { display: none; }
+
+    /* Glass Cards */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 2.5rem;
+    }
+
+    .glow-text {
+      background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .btn-pulse {
+      animation: pulse-glass 2s infinite;
+    }
+
+    @keyframes pulse-glass {
+      0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+      70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas"></canvas>
+
+  <button class="burger-btn" onclick="toggleMenu()">
+    <div class="burger-line"></div>
+    <div class="burger-line" style="width: 14px;"></div>
+    <div class="burger-line"></div>
+  </button>
+
+  <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
+  <div id="sideMenu">
+    <p class="text-blue-500 font-black text-[10px] uppercase tracking-[0.4em] mb-12">RVM Navigation</p>
+    <a href="index.html" class="menu-link-item">Home</a>
+    <a href="schedule.html" class="menu-link-item active">Midway Commuter</a>
+    <a href="map.html" class="menu-link-item">Live Tracking</a>
+    <a href="status.html" class="menu-link-item">Service Alerts</a>
+    <a href="passes.html" class="menu-link-item">Purchase Pass</a>
+    <a href="weather.html" class="menu-link-item">Weather</a>
+    
+    <div class="mt-auto pt-8 border-t border-white/5">
+        <p class="text-white/20 text-[10px] font-bold uppercase tracking-widest">Premium Transit Hub</p>
+    </div>
+  </div>
+
+  <div class="app-container">
+    
+    <header class="pt-12 pb-8 px-6 text-center sticky top-0 z-20 backdrop-blur-md bg-black/10">
+      <div class="flex flex-col items-center">
+        <h1 class="text-2xl font-black glow-text tracking-tight uppercase">River Valley Metro</h1>
+        <div class="mt-1 text-blue-500 text-[10px] font-black uppercase tracking-[0.4em]">Midway Commuter</div>
+      </div>
+    </header>
+
+    <div class="p-5 space-y-6">
+
+      <div class="glass-card p-7 shadow-2xl">
+        <div class="flex flex-col items-center mb-8">
+            <span id="dayTitle" class="bg-blue-500/20 text-blue-400 text-[9px] font-black px-4 py-1.5 rounded-full uppercase tracking-widest mb-3 border border-blue-500/30">Today's Schedule</span>
+            <h2 class="text-xl font-black text-white tracking-tight">Current Service</h2>
+        </div>
+        
+        <div id="busButtons" class="space-y-4">
+            </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <a href="tel:8159374287" class="glass-card p-5 flex flex-col items-center active:scale-95 transition-all">
+            <div class="w-10 h-10 bg-white/10 text-white rounded-full flex items-center justify-center mb-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" ></path>
+                </svg>
+            </div>
+            <span class="text-[9px] font-bold text-white/40 uppercase tracking-widest">Support</span>
+            <span class="text-xs font-black text-white">Dispatch</span>
+        </a>
+        
+        <div class="glass-card p-5 flex flex-col items-center">
+            <div id="statusIcon" class="w-10 h-10 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mb-2 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd" ></path>
+                </svg>
+            </div>
+            <span class="text-[9px] font-bold text-white/40 uppercase tracking-widest">System</span>
+            <span id="statusText" class="text-xs font-black text-green-400">Active</span>
+        </div>
+      </div>
+
+      <div class="glass-card p-5 shadow-2xl overflow-hidden">
+        <h3 class="text-white/60 text-[10px] font-black text-center mb-4 uppercase tracking-[0.2em]">Boarding Area Feed</h3>
+        <div class="rounded-2xl overflow-hidden bg-black shadow-inner border border-white/5">
+            <video class="w-full h-44 object-cover" controls playsinline>
+                <source src="https://www.rivervalleymetro.com/wp-content/uploads/2024/02/20240212_185242.mp4" type="video/mp4">
+            </video>
+        </div>
+      </div>
+
+      <div class="h-10"></div>
+    </div>
+  </div>
+
+  <script id="vertexShader" type="x-shader/x-vertex">
+    attribute vec2 position;
+    void main() { gl_Position = vec4(position, 0.0, 1.0); }
+  </script>
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    precision highp float;
+    uniform float uTime;
+    uniform vec2 uResolution;
+    void main() {
+        vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / min(uResolution.x, uResolution.y);
+        float t = uTime * 0.12;
+        vec3 col = vec3(0.0);
+        for(float i = 1.0; i < 4.0; i++) {
+            uv.x += 0.3 / i * sin(i * 3.0 * uv.y + t);
+            uv.y += 0.3 / i * cos(i * 3.0 * uv.x + t);
+            col += 0.005 / abs(sin(t + uv.y + uv.x));
+        }
+        gl_FragColor = vec4(col * vec3(0.1, 0.4, 0.8), 1.0);
+    }
+  </script>
+
+  <script>
+    // Menu Control
+    function toggleMenu() {
+        document.getElementById('sideMenu').classList.toggle('open');
+        document.getElementById('menuOverlay').classList.toggle('show');
+    }
+
+    // WebGL Engine
+    const canvas = document.getElementById('canvas');
+    const gl = canvas.getContext('webgl');
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    const program = gl.createProgram();
+    const vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, document.getElementById('vertexShader').textContent);
+    gl.compileShader(vs);
+    const fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, document.getElementById('fragmentShader').textContent);
+    gl.compileShader(fs);
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+
+    const posLoc = gl.getAttribLocation(program, 'position');
+    const uTime = gl.getUniformLocation(program, 'uTime');
+    const uRes = gl.getUniformLocation(program, 'uResolution');
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+    function renderBackground(t) {
+      gl.useProgram(program);
+      gl.uniform1f(uTime, t * 0.001);
+      gl.uniform2f(uRes, canvas.width, canvas.height);
+      gl.enableVertexAttribArray(posLoc);
+      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      requestAnimationFrame(renderBackground);
+    }
+    requestAnimationFrame(renderBackground);
+
+    // Schedule Logic
+    const weekdaySchedule = [
+      { b: "4:45 AM", m: "6:00 AM" }, { b: "6:00 AM", m: "7:15 AM" },
+      { b: "7:25 AM", m: "8:45 AM" }, { b: "8:45 AM", m: "10:05 AM" },
+      { b: "10:15 AM", m: "11:35 AM" }, { b: "11:35 AM", m: "12:55 PM" },
+      { b: "1:25 PM", m: "2:45 PM" }, { b: "3:05 PM", m: "4:25 PM" },
+      { b: "4:15 PM", m: "5:35 PM" }, { b: "5:50 PM", m: "7:05 PM" },
+      { b: "7:05 PM", m: "8:20 PM" }
+    ];
+
+    const saturdaySchedule = [
+      { b: "7:00 AM", m: "8:15 AM" }, { b: "9:40 AM", m: "11:00 AM" },
+      { b: "12:30 PM", m: "1:50 PM" }, { b: "4:20 PM", m: "5:40 PM" },
+      { b: "7:05 PM", m: "8:20 PM" }
+    ];
+
+    const sundaySchedule = [
+      { b: "8:00 AM", m: "9:15 AM" }, { b: "10:35 AM", m: "11:55 AM" },
+      { b: "1:20 PM", m: "2:40 PM" }, { b: "4:05 PM", m: "5:25 PM" }
+    ];
+
+    function parseTime(t) {
+      if (!t) return 0;
+      let [time, mod] = t.split(" ");
+      let [h, m] = time.split(":").map(Number);
+      if (mod === "PM" && h !== 12) h += 12;
+      if (mod === "AM" && h === 12) h = 0;
+      return h * 60 + m;
+    }
+
+    function getDirectionDisplay(schedule, key, currentTime) {
+      const activeBus = schedule.find(bus => {
+        const startTime = parseTime(bus[key]);
+        return currentTime >= startTime && currentTime < (startTime + 75);
+      });
+      if (activeBus) return `<span class="text-blue-400">● LIVE NOW</span><br>${activeBus[key]}`;
+      const nextBus = schedule.find(bus => parseTime(bus[key]) > currentTime);
+      return nextBus ? `Next: ${nextBus[key]}` : `<span class="opacity-40">FINISHED</span>`;
+    }
+
+    function updateUI() {
+      const now = new Date();
+      const cur = now.getHours() * 60 + now.getMinutes();
+      const d = now.getDay();
+      
+      let schedule = weekdaySchedule;
+      let title = "Weekday Service";
+      if (d === 0) { schedule = sundaySchedule; title = "Sunday Service"; }
+      else if (d === 6) { schedule = saturdaySchedule; title = "Saturday Service"; }
+
+      document.getElementById('dayTitle').textContent = title;
+
+      const northText = getDirectionDisplay(schedule, 'b', cur);
+      const southText = getDirectionDisplay(schedule, 'm', cur);
+
+      const lastDeparture = parseTime(schedule[schedule.length - 1].m) + 75;
+      const systemActive = cur < lastDeparture;
+
+      const statusIcon = document.getElementById('statusIcon');
+      const statusText = document.getElementById('statusText');
+
+      if (!systemActive) {
+          statusIcon.className = "w-10 h-10 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mb-2";
+          statusText.className = "text-xs font-black text-red-400";
+          statusText.textContent = "Offline";
+      }
+
+      document.getElementById('busButtons').innerHTML = `
+        <div class="bg-blue-600/30 border border-blue-500/40 p-6 rounded-[2rem] text-white btn-pulse">
+            <p class="text-[9px] font-black uppercase opacity-60 mb-2 tracking-widest text-center">Northbound (Midway)</p>
+            <p class="text-sm font-extrabold text-center leading-relaxed">${northText}</p>
+        </div>
+        <div class="bg-white/5 border border-white/10 p-6 rounded-[2rem] text-white">
+            <p class="text-[9px] font-black uppercase opacity-60 mb-2 tracking-widest text-center">Southbound (Kankakee)</p>
+            <p class="text-sm font-extrabold text-center leading-relaxed">${southText}</p>
+        </div>
+      `;
+    }
+
+    updateUI();
+    setInterval(updateUI, 30000);
+  </script>
+</body>
+</html>
