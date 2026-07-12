@@ -35,7 +35,7 @@
     #sideMenu.open { transform: translateX(100%); }
     .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; visibility: hidden; z-index: 15000; transition: 0.4s; }
     .menu-overlay.show { opacity: 1; visibility: visible; }
-    .menu-link-item { font-size: 1.5rem; font-weight: 800; color: #94a3b8; margin-bottom: 2rem; display: block; transition: 0.3s; }
+    .menu-link-item { font-size: 1.5rem; font-weight: 800; color: #94a3b8; margin-bottom: 2rem; display: block; transition: 0.3s; text-decoration: none; }
     .menu-link-item.active { color: white; }
 
     /* Burger Button */
@@ -142,7 +142,7 @@
   <div id="sideMenu">
     <p class="text-blue-500 font-black text-[10px] uppercase tracking-[0.4em] mb-12">RVM Navigation</p>
     <a href="index.html" class="menu-link-item">Home</a>
-    <a href="schedule.html" class="menu-link-item">Digital Times</a>
+    <a href="schedule.html" class="menu-link-item">Midway Commuter</a>
     <a href="map.html" class="menu-link-item">Live Tracking</a>
     <a href="status.html" class="menu-link-item">Service Alerts</a>
     <a href="passes.html" class="menu-link-item active">Purchase Pass</a>
@@ -203,6 +203,7 @@
 
     </main>
 
+    <!-- Bottom Navigation Bar Matching Main Setup -->
     <nav class="android-nav">
         <a href="index.html" class="nav-link">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
@@ -220,9 +221,9 @@
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
             <span>Map</span>
         </a>
-        <a href="smarttap.html" class="nav-link">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-            <span>SmartTap</span>
+        <a href="weather.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+            <span>Weather</span>
         </a>
         <a href="passes.html" class="nav-link active">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" /></svg>
