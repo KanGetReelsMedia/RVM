@@ -102,6 +102,28 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* --- Bottom Navigation Menu Styles --- */
+        .android-nav {
+            position: fixed;
+            bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 430px; height: 72px;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex; justify-content: space-around; align-items: center;
+            padding: 0 12px; z-index: 14000;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+        }
+        .nav-link {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-decoration: none; color: #94a3b8; width: 16%; height: 100%;
+            transition: color 0.2s ease, transform 0.1s;
+        }
+        .nav-link svg { width: 22px; height: 22px; margin-bottom: 4px; transition: stroke 0.2s ease; }
+        .nav-link span { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .nav-link.active { color: #38bdf8; }
+        .nav-link:active { transform: scale(0.92); }
     </style>
 </head>
 
@@ -138,7 +160,7 @@
         <div class="mt-1 text-blue-500 text-[10px] font-black uppercase tracking-[0.4em]">Weather Outlook</div>
     </header>
 
-    <div class="p-6 space-y-6 relative z-10">
+    <div class="p-6 space-y-6 relative z-10 pb-32">
         
         <div class="glass-card p-8 shadow-2xl text-center border-white/10">
             <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest mb-1 block">Currently</span>
@@ -172,6 +194,33 @@
 
         <div class="h-10"></div>
     </div>
+
+    <nav class="android-nav">
+        <a href="index.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            <span>Home</span>
+        </a>
+        <a href="status.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span>Alerts</span>
+        </a>
+        <a href="schedule.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>Times</span>
+        </a>
+        <a href="map.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+            <span>Map</span>
+        </a>
+        <a href="weather.html" class="nav-link active">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+            <span>Weather</span>
+        </a>
+        <a href="passes.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" /></svg>
+            <span>Pass</span>
+        </a>
+    </nav>
 </div>
 
 <script id="vertexShader" type="x-shader/x-vertex">
