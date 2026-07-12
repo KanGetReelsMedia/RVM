@@ -72,14 +72,15 @@
 
     .android-nav {
       position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      width: 90%; max-width: 380px; height: 70px;
+      width: 92%; max-width: 400px; height: 70px;
       background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(25px);
       border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px;
       display: flex; justify-content: space-around; align-items: center;
       z-index: 9999; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+      padding: 0 10px;
     }
 
-    .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255, 255, 255, 0.4); transition: all 0.3s ease; }
+    .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255, 255, 255, 0.4); transition: all 0.3s ease; flex: 1; text-align: center; }
     .nav-link.active { color: #3b82f6; }
   </style>
 </head>
@@ -189,6 +190,10 @@
       <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
       <span class="text-[8px] font-black uppercase">Map</span>
     </a>
+    <a href="smarttap.html" class="nav-link">
+      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.303.197-1.591 1.591M21.75 12h-2.25m-.197 5.303-1.591-1.591M12 21.75V19.5M6.697 17.303l1.591-1.591M2.25 12h2.25m.197-5.303 1.591 1.591" /></svg>
+      <span class="text-[8px] font-black uppercase">Tap</span>
+    </a>
   </nav>
 
   <script id="vertexShader" type="x-shader/x-vertex">
@@ -218,142 +223,6 @@
         document.getElementById('menuOverlay').classList.toggle('show');
     }
 
-    const canvas = document.getElementById('canvas');
-    const gl = canvas.getContext('webgl');
-    function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      gl.viewport(0, 0, canvas.width, canvas.height);
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    const program = gl.createProgram();
-    const vs = gl.createShader(gl.VERTEX_SHADER);
-    gl.shaderSource(vs, document.getElementById('vertexShader').textContent);
-    gl.compileShader(vs);
-    const fs = gl.createShader(gl.FRAGMENT_SHADER);
-    gl.shaderSource(fs, document.getElementById('fragmentShader').textContent);
-    gl.compileShader(fs);
-    gl.attachShader(program, vs);
-    gl.attachShader(program, fs);
-    gl.linkProgram(program);
-
-    const posLoc = gl.getAttribLocation(program, 'position');
-    const uTime = gl.getUniformLocation(program, 'uTime');
-    const uRes = gl.getUniformLocation(program, 'uResolution');
-    const buf = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
-
-    function render(t) {
-      gl.useProgram(program);
-      gl.uniform1f(uTime, t * 0.001);
-      gl.uniform2f(uRes, canvas.width, canvas.height);
-      gl.enableVertexAttribArray(posLoc);
-      gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
-
-    document.addEventListener('DOMContentLoaded', () => {
-      setTimeout(() => {
-        const splash = document.getElementById('splash');
-        splash.style.opacity = '0';
-        splash.style.transform = 'scale(1.1)';
-        setTimeout(() => {
-          splash.style.display = 'none';
-          document.getElementById('mainContent').classList.remove('opacity-0');
-        }, 800);
-      }, 2000);
-    });
-  </script>
-</body>
-</html>            <div class="flex justify-between border-b border-white/5 pb-3">
-                <span class="text-white/40">Mon – Fri</span><span class="font-bold text-white/90">5:00A - 9:30P</span>
-            </div>
-            <div class="flex justify-between border-b border-white/5 pb-3">
-                <span class="text-white/40">Saturday</span><span class="font-bold text-white/90">7:00A - 9:30P</span>
-            </div>
-            <div class="flex justify-between text-blue-400 font-bold">
-                <span>Sun / Holiday</span><span>8:00A - 4:00P</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="glass-card p-6">
-          <h2 class="font-extrabold text-white mb-5 flex items-center justify-between">
-            Midway Commuter
-            <span class="text-[9px] bg-indigo-500/20 px-2 py-1 rounded text-indigo-400 font-black">HOURS</span>
-          </h2>
-          <div class="space-y-4 text-sm">
-            <div class="flex justify-between border-b border-white/5 pb-3">
-                <span class="text-white/40">Mon – Fri</span><span class="font-bold text-white/90">4:45A - 9:30P</span>
-            </div>
-            <div class="flex justify-between border-b border-white/5 pb-3">
-                <span class="text-white/40">Saturday</span><span class="font-bold text-white/90">7:00A - 9:30P</span>
-            </div>
-            <div class="flex justify-between text-indigo-400 font-bold">
-                <span>Sun / Holiday</span><span>8:00A - 6:40P</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="pt-4">
-            <a href="tel:8159374287" class="flex items-center justify-center gap-3 bg-white text-black w-full py-5 rounded-[2rem] font-black active:scale-95 transition-all shadow-xl">
-                CALL SUPPORT
-            </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <nav class="android-nav">
-    <a href="index.html" class="nav-link active">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-      <span class="text-[8px] font-black uppercase">Home</span>
-    </a>
-    <a href="status.html" class="nav-link">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-      <span class="text-[8px] font-black uppercase">Alerts</span>
-    </a>
-    <a href="schedule.html" class="nav-link">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <span class="text-[8px] font-black uppercase">Times</span>
-    </a>
-    <a href="map.html" class="nav-link">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
-      <span class="text-[8px] font-black uppercase">Map</span>
-    </a>
-    <a href="passes.html" class="nav-link">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" /></svg>
-      <span class="text-[8px] font-black uppercase">Pass</span>
-    </a>
-  </nav>
-
-  <script id="vertexShader" type="x-shader/x-vertex">
-    attribute vec2 position;
-    void main() { gl_Position = vec4(position, 0.0, 1.0); }
-  </script>
-  <script id="fragmentShader" type="x-shader/x-fragment">
-    precision highp float;
-    uniform float uTime;
-    uniform vec2 uResolution;
-    void main() {
-        vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / min(uResolution.x, uResolution.y);
-        float t = uTime * 0.1;
-        vec3 col = vec3(0.0);
-        for(float i = 1.0; i < 4.0; i++) {
-            uv.x += 0.4 / i * sin(i * 3.0 * uv.y + t);
-            uv.y += 0.4 / i * cos(i * 3.0 * uv.x + t);
-            col += 0.006 / abs(sin(t + uv.y + uv.x));
-        }
-        gl_FragColor = vec4(col * vec3(0.1, 0.3, 0.7), 1.0);
-    }
-  </script>
-
-  <script>
     const canvas = document.getElementById('canvas');
     const gl = canvas.getContext('webgl');
     function resize() {
