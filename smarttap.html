@@ -11,6 +11,7 @@
             --glass-border: rgba(255, 255, 255, 0.08);
             --text-light: #f8fafc;
             --text-muted: #94a3b8;
+            --success-green: #10b981;
         }
 
         body {
@@ -22,7 +23,7 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 24px;
+            padding: 24px 24px 100px; /* Added extra bottom padding so nav doesn't overlap elements */
             margin: 0;
             color: var(--text-light);
             box-sizing: border-box;
@@ -102,7 +103,6 @@
             justify-content: center;
             margin: 0 auto 24px;
             box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.1);
-            /* Clean pulsing animation without rotation */
             animation: pulse-glow 2.5s infinite ease-in-out;
         }
 
@@ -158,16 +158,92 @@
             transform: scale(0.97);
             background: linear-gradient(135deg, #059669 0%, #047857 100%);
         }
+
+        /* --- Navigation Menu Styles --- */
+        .android-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 72px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 12px;
+            z-index: 1000;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: var(--text-muted);
+            width: 20%;
+            height: 100%;
+            transition: color 0.2s ease, transform 0.1s;
+        }
+
+        .nav-link svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+            transition: stroke 0.2s ease;
+        }
+
+        .nav-link span {
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Active & Tap states */
+        .nav-link.active {
+            color: var(--rvm-blue);
+        }
+
+        .nav-link:active {
+            transform: scale(0.92);
+        }
     </style>
 </head>
 <body>
 
     <div id="status-msg">Finding nearest Bus Stop one moment...</div>
     
-    <div id="app-container">
-        </div>
+    <div id="app-container"></div>
 
     <button onclick="window.location.href='tel:8159374444'" class="call-btn">Call Dispatch: (815) 937-4287</button>
+
+    <nav class="android-nav">
+        <a href="index.html" class="nav-link active">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+            <span>Home</span>
+        </a>
+        <a href="status.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span>Alerts</span>
+        </a>
+        <a href="schedule.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            <span>Times</span>
+        </a>
+        <a href="map.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
+            <span>Map</span>
+        </a>
+        <a href="passes.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5z" /></svg>
+            <span>Pass</span>
+        </a>
+    </nav>
 
 <script>
 const BUS_SCHEDULE = [
