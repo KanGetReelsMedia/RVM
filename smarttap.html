@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Smart Route Tap</title>
+    <style>
+        :root { 
+            --rvm-blue: #38bdf8; 
+            --glass-bg: rgba(15, 23, 42, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: radial-gradient(circle at 50% 0%, #1e3a8a 0%, #0f172a 75%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 24px;
+            margin: 0;
+            color: var(--text-light);
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #status-msg {
+            background: rgba(56, 189, 248, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 10px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 24px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            text-align: center;
+            letter-spacing: 0.5px;
+            color: #bae6fd;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #app-container {
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .route-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 32px;
+            padding: 35px 24px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .route-card:active {
+            transform: scale(0.97);
+            background: rgba(15, 23, 42, 0.7);
+        }
+
+        .route-tag {
+            background: rgba(56, 189, 248, 0.15);
+            color: var(--rvm-blue);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 18px;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
+
+        .stop-name { 
+            font-weight: 700; 
+            font-size: 1.5rem; 
+            margin-bottom: 28px; 
+            line-height: 1.3;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+
+        .eta-circle {
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, rgba(0,0,0,0) 70%);
+            border: 4px solid rgba(56, 189, 248, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: inset 0 0 20px rgba(56, 189, 248, 0.1);
+            /* Clean pulsing animation without rotation */
+            animation: pulse-glow 2.5s infinite ease-in-out;
+        }
+
+        .eta-val { 
+            font-size: 3.2rem; 
+            font-weight: 800; 
+            color: #ffffff;
+            letter-spacing: -1px;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% {
+                border-color: rgba(56, 189, 248, 0.3);
+                box-shadow: inset 0 0 15px rgba(56, 189, 248, 0.1), 0 0 10px rgba(56, 189, 248, 0.2);
+                text-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+                opacity: 0.85;
+            }
+            50% {
+                border-color: rgba(56, 189, 248, 0.7);
+                box-shadow: inset 0 0 25px rgba(56, 189, 248, 0.2), 0 0 20px rgba(56, 189, 248, 0.5);
+                text-shadow: 0 0 25px rgba(56, 189, 248, 0.8);
+                opacity: 1;
+            }
+        }
+
+        .eta-label {
+            color: var(--text-muted); 
+            font-weight: 600; 
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .call-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 380px;
+            margin-top: 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.25);
+            transition: transform 0.2s, background 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .call-btn:active {
+            transform: scale(0.97);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="status-msg">Finding nearest Bus Stop one moment...</div>
+    
+    <div id="app-container">
+        </div>
+
+    <button onclick="window.location.href='tel:8159374444'" class="call-btn">Call Dispatch: (815) 937-4287</button>
+
+<script>
+const BUS_SCHEDULE = [
+    // ROUTE 1
+    { route: "Route 1", name: "Family Dollar", points: [5, 35], lat: 41.135342, lon: -87.875415 },
+    { route: "Route 1", name: "Azzarelli Apartments", points: [8, 38], lat: 41.132558, lon: -87.867052 },
+    { route: "Route 1", name: "St. Mary's", points: [15, 45], lat: 41.119038, lon: -87.873694 },
+    { route: "Route 1", name: "Walgreens Court St.", points: [19, 49], lat: 41.120690, lon: -87.868184 },
+    { route: "Route 1", name: "Kankakee Metro Centre", points: [25, 55], lat: 41.123252, lon: -87.862439 },
+  
+    // ROUTE 2
+    { route: "Route 2", name: "Signature/Double Jack", points: [19, 33], lat: 41.175485, lon: -87.840128 },
+    { route: "Route 2", name: "Adventure Church", points: [38], lat: 41.171732, lon: -87.845257 },
+    { route: "Route 2", name: "Meijer (Southbound)", points: [45], lat: 41.159552, lon: -87.846333 },
+    { route: "Route 2", name: "Broadway Shelter", points: [51], lat: 41.144502, lon: -87.860132 },
+    { route: "Route 2", name: "Village Hall/Broadway", points: [58], lat: 41.142320, lon: -87.865146 },
+    { route: "Route 2", name: "Walmart", points: [14], lat: 41.191333, lon: -87.846702 },
+    { route: "Route 2", name: "Northfield Square Mall", points: [25, 30], lat: 41.176260, lon: -87.850188 },
+  
+    // ROUTE 3
+    { route: "Route 3", name: "Target", points: [20, 32], lat: 41.174230, lon: -87.853732 },
+    { route: "Route 3", name: "Bradley Library", points: [6], lat: 41.147932, lon: -87.855896 },
+    { route: "Route 3", name: "Christine and Uncle Leo", points: [13, 39], lat: 41.159482, lon: -87.846240 },
+    { route: "Route 3", name: "KCTC", points: [49], lat: 41.139352, lon: -87.860397 },
+  
+    // ROUTE 4
+    { route: "Route 4", name: "East Court Village", points: [7], lat: 41.118391, lon: -87.833328 },
+    { route: "Route 4", name: "Frontage Road", points: [13], lat: 41.119256, lon: -87.832655 },
+    { route: "Route 4", name: "Spruce and Fairmont", points: [15], lat: 41.124401, lon: -87.840707 },
+    { route: "Route 4", name: "Family Dollar (E. Court)", points: [18], lat: 41.119319, lon: -87.853803 },
+    { route: "Route 4", name: "Kankakee Metro Centre", points: [0, 30], lat: 41.123252, lon: -87.862439 },
+    { route: "Route 4", name: "St. Mary's Hospital", points: [33], lat: 41.121162, lon: -87.870647 },
+    { route: "Route 4", name: "Riverside Medical Center", points: [40], lat: 41.123833, lon: -87.883693 },
+    { route: "Route 4", name: "Kankakee County Health Dept.", points: [45], lat: 41.117823, lon: -87.898269 },
+  
+    // ROUTE 5
+    { route: "Route 5", name: "Aroma Park Shelter", points: [30], lat: 41.07652677, lon: -87.80604912 },
+    { route: "Route 5", name: "Crestview Apartments", points: [35], lat: 41.12170553, lon: -87.83305808 },
+    { route: "Route 5", name: "Riverside East Shelter", points: [15], lat: 41.11903959, lon: -87.84360574 },
+    { route: "Route 5", name: "Maple and Eagle", points: [18], lat: 41.11550637, lon: -87.84450806 },
+    { route: "Route 5", name: "Kankakee Metro Centre", points: [0, 30], lat: 41.123252, lon: -87.862439 },
+    { route: "Route 5", name: "Eagle and Chicago", points: [6], lat: 41.11212859, lon: -87.85988506 },
+    { route: "Route 5", name: "Dollar General", points: [13], lat: 41.11884632, lon: -87.84289188 },
+    { route: "Route 5", name: "Crestview Apartments", points: [16], lat: 41.12170553, lon: -87.83305808 },
+  
+    // ROUTE 6
+    { route: "Route 6", name: "Kankakee Metro Centre", points: [30], lat: 41.123252, lon: -87.862439 },
+    { route: "Route 6", name: "Kankakee Estates", points: [36], lat: 41.097204, lon: -87.869224 },
+    { route: "Route 6", name: "K.C.C.", points: [41], lat: 41.097920, lon: -87.850623 },
+    { route: "Route 6", name: "Del Monte", points: [46], lat: 41.078715, lon: -87.873666 },
+    { route: "Route 6", name: "Walmart  Kankakee", points: [58], lat: 41.080111, lon: -87.859779 },
+    { route: "Route 6", name: "Jerome Combs", points: [8], lat: 41.074736, lon: -87.859065 },
+    { route: "Route 6", name: "Schuyler and River", points: [18], lat: 41.116725, lon: -87.864536 },
+  
+    // ROUTE 7
+    { route: "Route 7", name: "Kankakee Metro Centre", points: [0, 30], lat: 41.123252, lon: -87.862439 },
+    { route: "Route 7", name: "Kankakee Estates", points: [6, 36], lat: 41.097204, lon: -87.869224 },
+    { route: "Route 7", name: "Del Monte", points: [8], lat: 41.078715, lon: -87.873666 },
+    { route: "Route 7", name: "K.C.C.", points: [11, 16], lat: 41.097920, lon: -87.850623 },
+    { route: "Route 7", name: "Kankakee Walmart", points: [15, 22, 40, 42], lat: 41.080111, lon: -87.859779 },
+    { route: "Route 7", name: "Jerome Combs", points: [29], lat: 41.074736, lon: -87.859065 },
+    { route: "Route 7", name: "Love's", points: [34], lat: 41.073173, lon: -87.868459 },
+    { route: "Route 7", name: "Harrison and Station", points: [22, 48, 49], lat: 41.118336, lon: -87.859923 },
+    
+    // ROUTE 8
+    { route: "Route 8", name: "Kankakee Metro Centre", points: [0, 30], lat: 41.123252, lon: -87.862439 },
+    { route: "Route 8", name: "Washington and Water", points: [3], lat: 41.106012, lon: -87.870434 },
+    { route: "Route 8", name: "Casey's on Jeffery", points: [8], lat: 41.105764, lon: -87.878645 },
+    { route: "Route 8", name: "Merchant and Curtis", points: [12], lat: 41.119900, lon: -87.887607 },
+    { route: "Route 8", name: "Kankakee High School", points: [15], lat: 41.105863, lon: -87.883624 },
+    { route: "Route 8", name: "Jewel on Washington", points: [19], lat: 41.116374, lon: -87.868320 },
+    { route: "Route 8", name: "Mulberry and Chicago", points: [33], lat: 41.127362, lon: -87.857056 },
+    { route: "Route 8", name: "Hobbie and Willow", points: [36], lat: 41.125996, lon: -87.840795 },
+    { route: "Route 8", name: "Broadway and Jefferson", points: [42], lat: 41.144482, lon: -87.846997 },
+    { route: "Route 8", name: "Brookmont and Harvard", points: [48], lat: 41.135200, lon: -87.843678 },
+  
+    // ROUTE 9
+    { route: "Route 9", name: "Manteno Metro Centre", points: [0, 41], lat: 41.249941, lon: -87.833964 },
+    { route: "Route 9", name: "ABC Supply", points: [7], lat: 41.249570, lon: -87.858234 },
+    { route: "Route 9", name: "Northfield Square Mall", points: [30], lat: 41.176260, lon: -87.850188 },
+    { route: "Route 9", name: "Walmart Bradley", points: [33], lat: 41.176260, lon: -87.850188 },
+    { route: "Route 9", name: "E. 2nd St.", points: [45], lat: 41.250558, lon: -87.829208 },
+    { route: "Route 9", name: "Veterans' Home", points: [52], lat: 41.237448, lon: -87.807407 },
+
+    // ROUTE 10
+    { route: "Route 10", name: "Brown Blvd.", points: [0], lat: 41.159404, lon: -87.882005 },
+    { route: "Route 10", name: "Casey's", points: [5, 34], lat: 41.178283, lon: -87.875416 },
+    { route: "Route 10", name: "Riverside Campus", points: [7, 36], lat: 41.186761, lon: -87.874805 },
+    { route: "Route 10", name: "River Valley Metro (Bourbonnais)", points: [13, 42], lat: 41.192119, lon: -87.853886 },
+    { route: "Route 10", name: "Northfield Square Mall (Bourbonnais)", points: [30], lat: 41.176260, lon: -87.850188 },
+    { route: "Route 10", name: "W. Bethel Dr.", points: [50], lat: 41.170079, lon: -87.876992 },
+    { route: "Route 10", name: "Almar Parkway", points: [55], lat: 41.162948, lon: -87.889606 },
+  
+    // ROUTE 11
+    { route: "Route 11", name: "Kankakee Metro Centre", points: [0], lat: 41.123252, lon: -87.862439 },
+    { route: "Route 11", name: "McDonald's 5th Ave.", points: [4], lat: 41.132611, lon: -87.876772 },
+    { route: "Route 11", name: "ONU", points: [11, 42], lat: 41.153721, lon: -87.874106 },
+    { route: "Route 11", name: "Northfield Meadows", points: [18], lat: 41.167629, lon: -87.840877 },
+    { route: "Route 11", name: "Northfield Square Mall", points: [30], lat: 41.176268, lon: -87.849967 },
+    { route: "Route 11", name: "Kroger", points: [36], lat: 41.162710, lon: -87.872209 },
+    { route: "Route 11", name: "Walgreens Kennedy Dr.", points: [48], lat: 41.132342, lon: -87.876781 },
+
+    // ROUTE 12
+    { route: "Route 12", name: "Kankakee Metro Centre", points: [25, 30], lat: 41.123252, lon: -87.862439 },
+    { route: "Route 12", name: "McDonald's 5th Av.", points: [34], lat: 41.132611, lon: -87.876772 },
+    { route: "Route 12", name: "Shine FM", points: [39], lat: 41.152201, lon: -87.876291 },
+    { route: "Route 12", name: "Meijer", points: [47], lat: 41.159552, lon: -87.846333 },
+    { route: "Route 12", name: "Kroger", points: [55], lat: 41.162710, lon: -87.872209 },
+    { route: "Route 12", name: "Brown Blvd.", points: [2], lat: 41.159426, lon: -87.881961 },
+    { route: "Route 12", name: "Heritage/Convent", points: [11], lat: 41.164397, lon: -87.876059 },
+    { route: "Route 12", name: "Perry Farm", points: [16], lat: 41.145131, lon: -87.876100 },
+    { route: "Route 12", name: "Walgreens", points: [19], lat: 41.132342, lon: -87.876781 },
+
+    // ROUTE 14
+    { route: "Route 14", name: "Kankakee Metro Centre", points: [0, 30], lat: 41.123252, lon: -87.862439 },
+    { route: "Route 14", name: "Mulberry/Chicago", points: [2], lat: 41.127362, lon: -87.857056 },
+    { route: "Route 14", name: "Fairmont/Court", points: [9], lat: 41.119043, lon: -87.843796 },
+    { route: "Route 14", name: "Eagle/Maple", points: [13], lat: 41.113849, lon: -87.842365 },
+    { route: "Route 14", name: "Harrison/Station", points: [20], lat: 41.117096, lon: -87.860163 },
+    { route: "Route 14", name: "Station/Schuyler", points: [33], lat: 41.117739, lon: -87.863924 },
+    { route: "Route 14", name: "Mercy Housing", points: [37], lat: 41.117739, lon: -87.863924 },
+    { route: "Route 14", name: "Merchant/Curtis", points: [41], lat: 41.119900, lon: -87.887607 },
+    { route: "Route 14", name: "Kankakee High School", points: [45], lat: 41.105863, lon: -87.883624 },
+    { route: "Route 14", name: "Kankakee Jewel", points: [49], lat: 41.116374, lon: -87.868320 }
+];
+
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    return Math.sqrt(Math.pow(lat2 - lat1, 2) + Math.pow(lon2 - lon1, 2));
+}
+
+function updateApp() {
+    if (!navigator.geolocation) {
+        handleLocationError("Geolocation not supported");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(pos => {
+        const uLat = pos.coords.latitude;
+        const uLon = pos.coords.longitude;
+
+        let closest = BUS_SCHEDULE[0];
+        let minD = calculateDistance(uLat, uLon, closest.lat, closest.lon);
+
+        BUS_SCHEDULE.forEach(stop => {
+            const d = calculateDistance(uLat, uLon, stop.lat, stop.lon);
+            if (d < minD) {
+                minD = d;
+                closest = stop;
+            }
+        });
+
+        displayStop(closest);
+    }, (err) => {
+        handleLocationError(err.message);
+    });
+}
+
+function handleLocationError(error) {
+    document.getElementById("status-msg").innerText = "Using default: Kankakee Metro Centre";
+    const defaultStop = BUS_SCHEDULE.find(s => s.name === "Kankakee Metro Centre") || BUS_SCHEDULE[0];
+    displayStop(defaultStop);
+}
+
+function displayStop(stop) {
+    const now = new Date();
+    const min = now.getMinutes();
+    
+    let next = stop.points.find(p => p >= min);
+    
+    if (next === undefined) {
+        next = stop.points[0] + 60;
+    }
+    
+    let wait = next - min;
+    let displayWait = wait <= 0 ? "NOW" : wait + "m";
+
+    document.getElementById("app-container").innerHTML = `
+        <div class="route-card" onclick="updateApp()">
+            <span class="route-tag">${stop.route}</span>
+            <div class="stop-name">${stop.name}</div>
+            <div class="eta-circle">
+                <div class="eta-val">${displayWait}</div>
+            </div>
+            <div class="eta-label">Estimated Wait</div>
+        </div>
+    `;
+    
+    document.getElementById("status-msg").innerHTML = `📍 Linked to <b>${stop.name}</b>`;
+}
+
+// Start app
+updateApp();
+// Update every 30 seconds
+setInterval(updateApp, 30000);
+</script>
+</body>
+</html>
