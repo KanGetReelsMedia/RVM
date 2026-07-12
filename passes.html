@@ -35,7 +35,7 @@
     #sideMenu.open { transform: translateX(100%); }
     .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; visibility: hidden; z-index: 15000; transition: 0.4s; }
     .menu-overlay.show { opacity: 1; visibility: visible; }
-    .menu-link-item { font-size: 1.5rem; font-weight: 800; color: #94a3b8; margin-bottom: 2rem; display: block; transition: 0.3s; text-decoration: none; }
+    .menu-link-item { font-size: 1.5rem; font-weight: 800; color: #94a3b8; margin-bottom: 1.5rem; display: block; transition: 0.3s; text-decoration: none; }
     .menu-link-item.active { color: white; }
 
     /* Burger Button */
@@ -114,16 +114,16 @@
         backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
         border-top: 1px solid rgba(255, 255, 255, 0.08);
         display: flex; justify-content: space-around; align-items: center;
-        padding: 0 12px; z-index: 14000;
+        padding: 0 6px; z-index: 14000;
         box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
     }
     .nav-link {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        text-decoration: none; color: #94a3b8; width: 16%; height: 100%;
+        text-decoration: none; color: #94a3b8; flex-1: 1 0 0%; height: 100%;
         transition: color 0.2s ease, transform 0.1s;
     }
-    .nav-link svg { width: 22px; height: 22px; margin-bottom: 4px; transition: stroke 0.2s ease; }
-    .nav-link span { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .nav-link svg { width: 20px; height: 20px; margin-bottom: 4px; transition: stroke 0.2s ease; }
+    .nav-link span { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
     .nav-link.active { color: #38bdf8; }
     .nav-link:active { transform: scale(0.92); }
   </style>
@@ -132,7 +132,7 @@
 
   <canvas id="canvas"></canvas>
 
-  <button class="burger-btn" onclick="toggleMenu()">
+  <button class="burger-btn" onclick="toggleMenu()" aria-label="Open Menu">
     <div class="burger-line"></div>
     <div class="burger-line" style="width: 14px;"></div>
     <div class="burger-line"></div>
@@ -145,6 +145,7 @@
     <a href="schedule.html" class="menu-link-item">Midway Commuter</a>
     <a href="map.html" class="menu-link-item">Live Tracking</a>
     <a href="status.html" class="menu-link-item">Service Alerts</a>
+    <a href="smarttap.html" class="menu-link-item">SmartTap</a>
     <a href="passes.html" class="menu-link-item active">Purchase Pass</a>
     <a href="weather.html" class="menu-link-item">Weather</a>
     
@@ -203,7 +204,6 @@
 
     </main>
 
-    <!-- Bottom Navigation Bar Matching Main Setup -->
     <nav class="android-nav">
         <a href="index.html" class="nav-link">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
@@ -220,6 +220,10 @@
         <a href="map.html" class="nav-link">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
             <span>Map</span>
+        </a>
+        <a href="smarttap.html" class="nav-link">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.303.197-1.591 1.591M21.75 12h-2.25m-.197 5.303-1.591-1.591M12 21.75V19.5M6.697 17.303l1.591-1.591M2.25 12h2.25m.197-5.303 1.591 1.591" /></svg>
+            <span>SmartTap</span>
         </a>
         <a href="weather.html" class="nav-link">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
