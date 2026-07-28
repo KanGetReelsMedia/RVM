@@ -30,7 +30,7 @@
     }
     .app-container::-webkit-scrollbar { display: none; }
 
-    /* --- Hamburger Side Menu --- */
+    /* --- SINGLE NAVIGATION: Hamburger Side Menu --- */
     #sideMenu {
       position: fixed; top: 0; left: -100%; width: 80%; height: 100%;
       background: rgba(10, 10, 10, 0.95); backdrop-filter: blur(30px);
@@ -41,11 +41,12 @@
     #sideMenu.open { transform: translateX(100%); }
     .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); opacity: 0; visibility: hidden; z-index: 15000; transition: 0.4s; }
     .menu-overlay.show { opacity: 1; visibility: visible; }
-    .menu-link-item { font-size: 1.5rem; font-weight: 800; color: #94a3b8; margin-bottom: 2rem; display: block; transition: 0.3s; }
+    .menu-link-item { font-size: 1.5rem; font-weight: 800; color: #94a3b8; margin-bottom: 2rem; display: block; transition: 0.3s; text-decoration: none; }
     .menu-link-item.active { color: white; }
+    .menu-link-item:hover { color: white; transform: translateX(8px); }
 
     /* Burger Button */
-    .burger-btn { position: fixed; top: 24px; right: 24px; z-index: 16000; padding: 12px; border-radius: 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); }
+    .burger-btn { position: fixed; top: 24px; right: 24px; z-index: 16000; padding: 12px; border-radius: 18px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); cursor: pointer; }
     .burger-line { width: 22px; height: 2px; background: white; margin: 5px 0; border-radius: 2px; transition: 0.3s; }
 
     #splash { 
@@ -70,27 +71,14 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-
-    .android-nav {
-      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
-      width: 92%; max-width: 400px; height: 70px;
-      background: rgba(15, 15, 15, 0.8); backdrop-filter: blur(25px);
-      border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px;
-      display: flex; justify-content: space-around; align-items: center;
-      z-index: 9999; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-      padding: 0 10px;
-    }
-
-    .nav-link { display: flex; flex-direction: column; align-items: center; gap: 4px; color: rgba(255, 255, 255, 0.4); transition: all 0.3s ease; flex: 1; text-align: center; }
-    .nav-link.active { color: #3b82f6; }
   </style>
 </head>
 <body>
 
   <canvas id="canvas"></canvas>
 
-  <!-- Hamburger Menu Trigger -->
-  <button class="burger-btn" onclick="toggleMenu()">
+  <!-- Single Navigation Trigger -->
+  <button class="burger-btn" onclick="toggleMenu()" aria-label="Open navigation">
     <div class="burger-line"></div>
     <div class="burger-line" style="width: 14px;"></div>
     <div class="burger-line"></div>
@@ -99,7 +87,7 @@
   <!-- Tap Overlay Backing -->
   <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
   
-  <!-- Slide-out Navigation Overlay Drawer -->
+  <!-- Slide-out Navigation - NOW THE ONLY NAV -->
   <div id="sideMenu">
     <p class="text-blue-500 font-black text-[10px] uppercase tracking-[0.4em] mb-12">RVM Navigation</p>
     <a href="index.html" class="menu-link-item active">Home</a>
@@ -138,14 +126,14 @@
         <div class="glass-card p-6">
           <h2 class="font-extrabold text-white mb-5 flex items-center justify-between">
             Local & Metro Plus 
-            <span class="text-[9px] bg-blue-500/20 px-2 py-1 rounded text-blue-400 font-black">HOURS</span>
+            <span class="text-[9px] bg-white/10 px-2 py-1 rounded text-white/60 font-black">HOURS</span>
           </h2>
           <div class="space-y-4 text-sm">
             <div class="flex justify-between border-b border-white/5 pb-3">
-                <span class="text-white/40">Mon – Fri</span><span class="font-bold text-white/90">5:00A - 9:30P</span>
+                <span class="text-white/40">Mon – Fri</span><span class="font-bold text-white/90">6:00A - 8:30P</span>
             </div>
             <div class="flex justify-between border-b border-white/5 pb-3">
-                <span class="text-white/40">Saturday</span><span class="font-bold text-white/90">7:00A - 9:30P</span>
+                <span class="text-white/40">Saturday</span><span class="font-bold text-white/90">7:00A - 8:30P</span>
             </div>
             <div class="flex justify-between text-blue-400 font-bold">
                 <span>Sun / Holiday</span><span>8:00A - 4:00P</span>
@@ -172,7 +160,7 @@
         </div>
 
         <div class="pt-4">
-            <a href="tel:8159374287" class="flex items-center justify-center gap-3 bg-white text-black w-full py-5 rounded-[2rem] font-black active:scale-95 transition-all shadow-xl">
+            <a href="tel:8159374287" class="flex items-center justify-center gap-3 bg-white text-black w-full py-5 rounded-[2rem] font-black active:scale-95 transition-all shadow-xl no-underline">
                 CALL SUPPORT
             </a>
         </div>
@@ -180,29 +168,7 @@
     </div>
   </div>
 
-  <!-- Quick-Access Bottom Action Bar -->
-  <nav class="android-nav">
-    <a href="index.html" class="nav-link active">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-      <span class="text-[8px] font-black uppercase">Home</span>
-    </a>
-    <a href="status.html" class="nav-link">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-      <span class="text-[8px] font-black uppercase">Alerts</span>
-    </a>
-    <a href="schedule.html" class="nav-link">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-      <span class="text-[8px] font-black uppercase">Times</span>
-    </a>
-    <a href="map.html" class="nav-link">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
-      <span class="text-[8px] font-black uppercase">Map</span>
-    </a>
-    <a href="smarttap.html" class="nav-link">
-      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15.042 21.672 13.684 16.6m0 0-2.51 2.225.569-9.47 5.227 7.917-3.286-.672ZM12 2.25V4.5m5.303.197-1.591 1.591M21.75 12h-2.25m-.197 5.303-1.591-1.591M12 21.75V19.5M6.697 17.303l1.591-1.591M2.25 12h2.25m.197-5.303 1.591 1.591" /></svg>
-      <span class="text-[8px] font-black uppercase">Tap</span>
-    </a>
-  </nav>
+  <!-- REMOVED: android-nav bottom bar - this was the duplicate -->
 
   <!-- Background WebGL Shaders -->
   <script id="vertexShader" type="x-shader/x-vertex">
@@ -227,13 +193,11 @@
   </script>
 
   <script>
-    // Toggles the slide-out menu panel
     function toggleMenu() {
         document.getElementById('sideMenu').classList.toggle('open');
         document.getElementById('menuOverlay').classList.toggle('show');
     }
 
-    // WebGL Canvas Rendering Setup
     const canvas = document.getElementById('canvas');
     const gl = canvas.getContext('webgl');
     function resize() {
@@ -273,7 +237,6 @@
     }
     requestAnimationFrame(render);
 
-    // Initial App Splash Logic
     document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         const splash = document.getElementById('splash');
@@ -288,4 +251,3 @@
   </script>
 </body>
 </html>
-
