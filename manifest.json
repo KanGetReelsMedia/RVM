@@ -8,10 +8,11 @@
       "type": "image/png"
     }
   ],
-  "start_url": "/your-repository-name/index.html",
-  "scope": "/your-repository-name/",
+  "start_url": "/RVM/",
+  "scope": "/RVM/",
   "background_color": "#000000",
   "theme_color": "#3b82f6",
   "display": "standalone",
   "orientation": "portrait"
 }
+
