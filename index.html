@@ -1,104 +1,259 @@
-DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>River Valley Metro | Main</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --rvm-navy: #002B49;
-      --rvm-blue: #005A9C;
-      --rvm-gold: #FFC72C;
-      --rvm-gold-hover: #E5B220;
-      --rvm-bg-light: #F4F7FA;
-      --rvm-card-bg: #FFFFFF;
-      --rvm-border: #CBD5E1;
-      --text-dark: #1E293B;
-      --text-muted: #64748B;
+    :root { --rvm-navy:#002B49; --rvm-blue:#005A9C; --rvm-gold:#FFC72C; --rvm-gold-hover:#E5B220; --rvm-bg-light:#F4F7FA; --rvm-border:#CBD5E1; --text-dark:#1E293B; --text-muted:#64748B; }
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent} body{font-family:'Plus Jakarta Sans',sans-serif;background:#000;overflow:hidden;height:100vh;height:100dvh;color:white;display:flex;justify-content:center;align-items:center}
+    #canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0}
+   .app-container{position:relative;width:100vw;height:100vh;max-width:430px;max-height:932px;z-index:10;overflow-y:auto;scrollbar-width:none;background:rgba(15,15,20,0.85);backdrop-filter:blur(12px);display:flex;flex-direction:column}
+   .app-container::-webkit-scrollbar{display:none} @media(min-width:431px){.app-container{border:10px solid #1e293b;border-radius:48px;height:90vh}}
+    #sideMenu{position:fixed;top:50%;left:50%;width:88%;max-width:320px;background:rgba(18,18,22,0.98);backdrop-filter:blur(30px);z-index:20000;display:flex;flex-direction:column;padding:28px 20px 20px;border:1px solid rgba(255,255,255,0.12);border-radius:28px;transform:translate(-50%,-50%) scale(0.9);opacity:0;visibility:hidden;transition:all 0.35s cubic-bezier(0.34,1.56,0.64,1)}
+    #sideMenu.open{transform:translate(-50%,-50%) scale(1);opacity:1;visibility:visible}.menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);opacity:0;visibility:hidden;z-index:15000;transition:0.35s}.menu-overlay.show{opacity:1;visibility:visible}
+   .menu-link-item{font-size:1.05rem;font-weight:800;color:#94a3b8;padding:16px;margin-bottom:10px;border-radius:16px;display:block;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);text-align:center;cursor:pointer}
+   .menu-link-item.active{color:white;background:rgba(59,130,246,0.20);border-color:rgba(59,130,246,0.4)}.popup-close-btn{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:white;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px}
+   .burger-btn{position:fixed;top:calc(12px + env(safe-area-inset-top));right:12px;z-index:16000;width:42px;height:42px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;border-radius:12px;background:rgba(20,20,20,0.9);border:1px solid rgba(255,255,255,0.15);cursor:pointer}.burger-line{width:18px;height:2px;background:white;border-radius:2px;display:block}.burger-line.short{width:11px}
+    #splash{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:30000;transition:all 0.8s}
+   .loader-progress{width:40%;height:100%;background:#3b82f6;animation:loading 1.5s infinite ease-in-out} @keyframes loading{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+   .view-section{display:none;flex:1;flex-direction:column;overflow-y:auto}.view-section.active{display:flex}
+    #view-passenger{background:var(--rvm-bg-light);color:var(--text-dark)} #view-midway{padding:20px;padding-top:56px;padding-bottom:32px}
+   .p-header{background:#fff;color:var(--rvm-navy);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.06);border-bottom:1px solid var(--rvm-border);flex-shrink:0}
+   .p-brand{font-size:1.05rem;font-weight:800}.p-content{padding:16px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:16px}
+   .glass-card{background:rgba(255,255,255,0.06);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:2rem}
+   .light-card{background:white;border-radius:16px;padding:16px;box-shadow:0 4px 12px rgba(0,0,0,0.06);border:1px solid var(--rvm-border)}
+   .input-field{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid var(--rvm-border);font-size:0.9rem;outline:none;background:white;color:var(--text-dark)}.input-field:focus{border-color:var(--rvm-blue)}
+   .gold-btn{background:var(--rvm-gold);color:var(--rvm-navy);border:none;padding:14px;border-radius:12px;font-weight:800;font-size:0.95rem;cursor:pointer;width:100%;text-transform:uppercase;letter-spacing:0.5px}
+   .outline-btn{background:white;color:var(--rvm-blue);border:1.5px solid var(--rvm-blue);padding:10px;border-radius:10px;font-weight:700;font-size:0.85rem;cursor:pointer;width:100%}
+   .trip-card{background:white;border-radius:12px;padding:14px;border-left:4px solid var(--rvm-blue);box-shadow:0 2px 8px rgba(0,0,0,0.05);margin-bottom:10px}
+   .status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-weight:800;text-transform:uppercase}
+   .app-alert-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;justify-content:center;align-items:center;z-index:3000;backdrop-filter:blur(3px)}.app-alert-overlay.active{display:flex}.app-alert-card{background:white;padding:24px;border-radius:16px;width:340px;max-width:90%;text-align:center;color:var(--text-dark)}
+   .sched-tabs{display:flex;gap:8px;margin-bottom:14px}.sched-tab{flex:1;padding:10px;border-radius:12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;font-weight:800;font-size:0.75rem;text-transform:uppercase;cursor:pointer;text-align:center}.sched-tab.active{background:white;color:#002B49}
+   .sched-table{width:100%;border-collapse:collapse}.sched-table th{font-size:0.6rem;text-transform:uppercase;color:rgba(255,255,255,0.4);padding:8px 2px;text-align:center;font-weight:800;border-bottom:1px solid rgba(255,255,255,0.08)}.sched-table td{font-size:0.74rem;font-weight:600;color:rgba(255,255,255,0.85);padding:8px 2px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.05)}
+    @keyframes pulseGlow{0%,100%{box-shadow:0 0 0 0 rgba(255,199,44,0.5);background:rgba(255,199,44,0.15)}50%{box-shadow:0 0 20px 2px rgba(255,199,44,0.4);background:rgba(255,199,44,0.28)}}.next-bus-row{animation:pulseGlow 1.8s infinite ease-in-out;border-radius:12px}.next-bus-row td{color:white!important;font-weight:900!important}.next-bus-badge{display:inline-block;font-size:0.55rem;font-weight:900;background:#FFC72C;color:#002B49;padding:2px 6px;border-radius:20px}
+   .midway-status-banner{padding:14px 16px;border-radius:16px;font-weight:900;font-size:0.82rem;text-align:center;margin-bottom:14px;display:none}.midway-status-banner.open{display:flex;justify-content:center;align-items:center;gap:8px;background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);color:#4ade80}.midway-status-banner.closed{display:flex;justify-content:center;align-items:center;gap:8px;background:rgba(239,68,68,0.18);border:1px solid rgba(239,68,68,0.5);color:#fca5a5}
+   .book-btn{background:#FFC72C;color:#002B49;border:none;padding:4px 10px;border-radius:20px;font-weight:900;font-size:0.65rem;cursor:pointer;letter-spacing:0.3px}.book-btn:hover{background:#fff}
+   .service-pill{display:flex;background:#F1F5F9;border-radius:12px;padding:4px;gap:4px;margin-bottom:12px}.service-pill button{flex:1;padding:10px;border-radius:8px;border:none;font-weight:800;font-size:0.8rem;cursor:pointer;background:transparent;color:#64748B}.service-pill button.active{background:#002B49;color:white}
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <button class="burger-btn" onclick="toggleMenu()"><span class="burger-line"></span><span class="burger-line short"></span><span class="burger-line"></span></button>
+  <div id="menuOverlay" class="menu-overlay" onclick="toggleMenu()"></div>
+  <div id="sideMenu"><button class="popup-close-btn" onclick="toggleMenu()">×</button><p class="text-blue-500 font-black text-[10px] uppercase tracking-[0.4em] mb-6 text-center">RVM Navigation</p><a class="menu-link-item active" id="nav-passenger" onclick="showView('passenger')">🚌 Passenger Portal</a><a class="menu-link-item" id="nav-midway" onclick="showView('midway')">🚍 Midway Commuter</a></div>
+  <div id="splash"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQjBRXORehZGVAUiu8vzUjk_Jli1YGIERGWwA&s" class="w-24 h-24 rounded-full border-4 border-white/20"><h1 class="text-white text-xl font-black mt-6 uppercase">River Valley Metro</h1><div class="mt-8 w-24 h-1 bg-white/10 rounded-full overflow-hidden"><div class="loader-progress"></div></div></div>
+
+  <div class="app-container">
+    <!-- PASSENGER - NOW WITH MIDWAY BOOKING -->
+    <div id="view-passenger" class="view-section active">
+      <div class="p-header"><div class="p-brand">🚌 RVM Passenger</div><div style="font-size:0.7rem;background:#E0F2FE;color:var(--rvm-blue);padding:4px 10px;border-radius:20px;font-weight:800;">LIVE</div></div>
+      <div class="p-content">
+        <div id="trackerBox" style="display:none;" class="light-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><h3 style="font-size:0.9rem;font-weight:800;color:var(--rvm-navy);">🚦 Live Trip Status</h3><span id="liveStatusBadge" class="status-badge" style="background:#FEF3C7;color:#92400E;">Pending</span></div><div id="trackerDetails" style="font-size:0.85rem;line-height:1.5;"></div><div id="trackerMap" style="height:180px;margin-top:12px;border-radius:10px;background:#e2e8f0;"></div><button id="cancelRideBtn" style="margin-top:12px;background:#FEE2E2;color:#DC2626;border:1px solid #FECACA;padding:10px;border-radius:10px;font-weight:800;width:100%;cursor:pointer;">Cancel Ride</button></div>
+
+        <div class="light-card">
+          <h3 id="requestPanelTitle" style="font-size:0.95rem;font-weight:800;color:var(--rvm-navy);margin-bottom:8px;">Request a New Ride</h3>
+
+          <!-- SERVICE TYPE SWITCHER -->
+          <div class="service-pill"><button id="btnLocal" class="active" onclick="setServiceType('local')">Local / Metro Plus</button><button id="btnMidway" onclick="setServiceType('midway')">🚍 Midway</button></div>
+
+          <div id="midwayBookingBox" style="display:none;background:#FFF8E1;border:1px solid #FFC72C;border-radius:12px;padding:12px;margin-bottom:12px;">
+            <p style="font-size:0.75rem;font-weight:800;color:#92400E;margin-bottom:8px;">🚍 Midway Commuter Booking - Pick a scheduled departure</p>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <select id="midwayDirection" class="input-field" style="flex:1;"><option value="toMidway">To Midway Airport</option><option value="fromMidway">From Midway Airport</option></select>
+              <select id="midwayStop" class="input-field" style="flex:1;"><option value="Bourbonnais Metro Centre">Bourbonnais Metro</option><option value="Manteno Metro Centre">Manteno Metro</option></select>
+            </div>
+            <select id="midwayTimeSelect" class="input-field"></select>
+            <p id="midwayInfo" style="font-size:0.7rem;color:#64748B;margin-top:6px;"></p>
+          </div>
+
+          <p style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px;">Your phone is your account. Dispatch looks you up by phone.</p>
+          <div style="background:var(--rvm-bg-light);padding:10px;border-radius:8px;margin-bottom:12px;display:flex;gap:8px;"><input id="lookupPhone" class="input-field" style="flex:1;" placeholder="Enter phone to load my trips" /><button id="lookupBtn" class="gold-btn" style="width:auto;padding:10px 16px;font-size:0.8rem;">Load</button></div>
+          <div id="myTripsList" style="max-height:200px;overflow-y:auto;margin-bottom:16px;display:none;"></div>
+
+          <form id="passengerTripForm" style="display:flex;flex-direction:column;gap:12px;">
+            <input type="hidden" id="editingTripId" />
+            <input type="hidden" id="serviceType" value="local" />
+            <div><label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);">Full Name</label><input id="passengerName" class="input-field" required placeholder="John Doe"/></div>
+            <div><label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);">Phone (Your Account ID)</label><input id="passengerPhone" class="input-field" required placeholder="(815) 555-0100"/></div>
+            <div><label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);">Pickup Location</label><input id="pickupLocation" class="input-field" required placeholder="123 Main St, Kankakee"/><button type="button" id="useCurrentLocationBtn" class="outline-btn" style="margin-top:6px;">📍 Use Current Location</button></div>
+            <div><label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);">Drop-off Location</label><input id="dropoffLocation" class="input-field" required placeholder="Midway Station / Walmart / Hospital"/></div>
+            <div style="display:flex;gap:10px;"><div style="flex:1;"><label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);">Date</label><input id="tripDate" type="date" class="input-field" required/></div><div style="flex:1;"><label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);">Pickup Time</label><input id="pickupTime" type="time" class="input-field" required/></div></div>
+            <div style="display:flex;align-items:center;gap:8px;padding:6px 0;"><input type="checkbox" id="isRoundTrip" style="width:18px;height:18px;"/><label for="isRoundTrip" style="font-size:0.85rem;font-weight:700;">Round Trip? Add Return</label></div>
+            <div id="returnTimeGroup" style="display:none;"><label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);">Return Pickup Time</label><input id="returnPickupTime" type="time" class="input-field"/></div>
+            <button type="submit" id="submitTripBtn" class="gold-btn">SUBMIT RIDE REQUEST</button><button type="button" id="resetFormBtn" class="outline-btn">Clear Form</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- MIDWAY -->
+    <div id="view-midway" class="view-section">
+      <header class="text-center mb-6"><div class="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-6"></div><h1 class="text-3xl font-black">Midway<br><span style="background:linear-gradient(135deg,#fff 0%,#94a3b8 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Commuter</span></h1><p class="text-blue-400 font-bold text-[10px] uppercase tracking-[0.4em] mt-2">Tap BOOK to schedule</p></header>
+      <div id="midwayLiveBanner" class="midway-status-banner"></div>
+      <div class="sched-tabs"><div class="sched-tab active" id="tab-weekday" onclick="switchMidwayTab('weekday')">Weekday</div><div class="sched-tab" id="tab-saturday" onclick="switchMidwayTab('saturday')">Saturday</div><div class="sched-tab" id="tab-sunday" onclick="switchMidwayTab('sunday')">Sun / Hol</div></div>
+
+      <div id="sched-weekday" class="glass-card p-3"><h2 class="font-extrabold text-white text-[12px] mb-2">MONDAY - FRIDAY • 11 TRIPS</h2>
+        <div class="overflow-x-auto"><table class="sched-table" data-day="weekday"><thead><tr><th>Bourbonnais</th><th>Manteno</th><th style="color:#FFC72C">Midway Arr</th><th>Book</th></tr></thead><tbody>
+          <tr data-time="04:45" data-bour="04:45 am" data-mant="04:55 am" data-midarr="05:55 am"><td>4:45a</td><td>4:55a</td><td style="color:#FFC72C">5:55a</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','04:45','05:55 am')">BOOK</button></td></tr>
+          <tr data-time="06:00" data-bour="06:00 am" data-mant="06:10 am" data-midarr="07:10 am"><td>6:00a</td><td>6:10a</td><td style="color:#FFC72C">7:10a</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','06:00','07:10 am')">BOOK</button></td></tr>
+          <tr data-time="07:25"><td>7:25a</td><td>7:35a</td><td style="color:#FFC72C">8:40a</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','07:25','08:40 am')">BOOK</button></td></tr>
+          <tr data-time="08:45"><td>8:45a</td><td>8:55a</td><td style="color:#FFC72C">10:00a</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','08:45','10:00 am')">BOOK</button></td></tr>
+          <tr data-time="10:15"><td>10:15a</td><td>10:25a</td><td style="color:#FFC72C">11:30a</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','10:15','11:30 am')">BOOK</button></td></tr>
+          <tr data-time="11:35"><td>11:35a</td><td>11:45a</td><td style="color:#FFC72C">12:50p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','11:35','12:50 pm')">BOOK</button></td></tr>
+          <tr data-time="13:25"><td>1:25p</td><td>1:35p</td><td style="color:#FFC72C">2:40p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','13:25','02:40 pm')">BOOK</button></td></tr>
+          <tr data-time="15:05"><td>3:05p</td><td>3:15p</td><td style="color:#FFC72C">4:20p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','15:05','04:20 pm')">BOOK</button></td></tr>
+          <tr data-time="16:15"><td>4:15p</td><td>4:25p</td><td style="color:#FFC72C">5:30p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','16:15','05:30 pm')">BOOK</button></td></tr>
+          <tr data-time="17:50"><td>5:50p</td><td>6:00p</td><td style="color:#FFC72C">7:00p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','17:50','07:00 pm')">BOOK</button></td></tr>
+          <tr data-time="19:05"><td>7:05p</td><td>7:15p</td><td style="color:#FFC72C">8:15p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport - Arrive','19:05','08:15 pm')">BOOK</button></td></tr>
+        </tbody></table>
+        <table class="sched-table mt-4" style="opacity:0.6"><thead><tr><th style="color:#FFC72C">Midway Dep</th><th>Manteno</th><th>Bourbonnais</th><th>Book</th></tr></thead><tbody>
+          <tr><td style="color:#FFC72C">6:00a</td><td>7:00a</td><td>7:10a</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','06:00','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">7:15a</td><td>8:15a</td><td>8:25a</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Manteno Metro Centre','07:15','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">8:45a</td><td>9:50a</td><td>10:00a</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','08:45','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">10:05a</td><td>11:10a</td><td>11:20a</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','10:05','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">11:35a</td><td>12:40p</td><td>12:50p</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','11:35','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">12:55p</td><td>2:00p</td><td>2:10p</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','12:55','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">2:45p</td><td>3:50p</td><td>4:00p</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','14:45','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">4:25p</td><td>5:30p</td><td>5:40p</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','16:25','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">5:35p</td><td>6:40p</td><td>6:50p</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','17:35','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">7:05p</td><td>8:05p</td><td>8:15p</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','19:05','')">BOOK</button></td></tr>
+          <tr><td style="color:#FFC72C">8:20p</td><td>9:20p</td><td>9:30p</td><td><button class="book-btn" onclick="bookMidwayTrip('Midway Airport - Depart','Bourbonnais Metro Centre','20:20','')">BOOK</button></td></tr>
+        </tbody></table></div>
+      </div>
+
+      <div id="sched-saturday" class="glass-card p-3" style="display:none;"><h2 class="font-extrabold text-white text-[12px] mb-2">SATURDAY</h2><div class="overflow-x-auto"><table class="sched-table" data-day="saturday"><thead><tr><th>Bourbonnais</th><th style="color:#FFC72C">Midway Arr</th><th>Book</th></tr></thead><tbody>
+        <tr data-time="07:00"><td>7:00a</td><td style="color:#FFC72C">8:10a</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport','07:00','08:10 am')">BOOK</button></td></tr>
+        <tr data-time="09:40"><td>9:40a</td><td style="color:#FFC72C">10:55a</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport','09:40','10:55 am')">BOOK</button></td></tr>
+        <tr data-time="12:30"><td>12:30p</td><td style="color:#FFC72C">1:45p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport','12:30','01:45 pm')">BOOK</button></td></tr>
+        <tr data-time="16:20"><td>4:20p</td><td style="color:#FFC72C">5:35p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport','16:20','05:35 pm')">BOOK</button></td></tr>
+        <tr data-time="19:05"><td>7:05p</td><td style="color:#FFC72C">8:15p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport','19:05','08:15 pm')">BOOK</button></td></tr>
+      </tbody></table></div></div>
+
+      <div id="sched-sunday" class="glass-card p-3" style="display:none;"><h2 class="font-extrabold text-white text-[12px] mb-2">SUNDAY & HOLIDAYS</h2><div class="overflow-x-auto"><table class="sched-table" data-day="sunday"><thead><tr><th>Bourbonnais</th><th style="color:#FFC72C">Midway Arr</th><th>Book</th></tr></thead><tbody>
+        <tr data-time="08:00"><td>8:00a</td><td style="color:#FFC72C">9:10a</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport','08:00','09:10 am')">BOOK</button></td></tr>
+        <tr data-time="10:35"><td>10:35a</td><td style="color:#FFC72C">11:50a</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport','10:35','11:50 am')">BOOK</button></td></tr>
+        <tr data-time="13:20"><td>1:20p</td><td style="color:#FFC72C">2:35p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport','13:20','02:35 pm')">BOOK</button></td></tr>
+        <tr data-time="16:05"><td>4:05p</td><td style="color:#FFC72C">5:20p</td><td><button class="book-btn" onclick="bookMidwayTrip('Bourbonnais Metro Centre','Midway Airport','16:05','05:20 pm')">BOOK</button></td></tr>
+      </tbody></table></div></div>
+
+      <div class="glass-card p-5 mt-4"><h3 class="font-bold text-white/80 text-sm mb-1">How Midway Booking Works</h3><p class="text-white/50 text-xs">Tap BOOK → auto-fills Passenger form with correct Midway stop & scheduled time → submit. Dispatch sees it as a Midway Commuter trip.</p></div>
+      <a href="tel:8159374287" class="flex items-center justify-center gap-3 bg-white text-black w-full py-5 rounded-[1.8rem] font-black mt-4 no-underline">CALL DISPATCH - 815-937-4287</a>
+    </div>
+  </div>
+
+  <div id="appAlertOverlay" class="app-alert-overlay" onclick="if(event.target===this) closeAppAlert()"><div class="app-alert-card"><h4 id="appAlertTitle">Notice</h4><p id="appAlertMessage"></p><button class="gold-btn" onclick="closeAppAlert()" style="background: var(--rvm-blue); color:white;">OK</button></div></div>
+  <script id="vertexShader" type="x-shader/x-vertex">attribute vec2 position;void main(){gl_Position=vec4(position,0.0,1.0);}</script><script id="fragmentShader" type="x-shader/x-fragment">precision highp float;uniform float uTime;uniform vec2 uResolution;void main(){vec2 uv=(gl_FragCoord.xy-0.5*uResolution)/min(uResolution.x,uResolution.y);float t=uTime*0.1;vec3 col=vec3(0.0);for(float i=1.0;i<4.0;i++){uv.x+=0.4/i*sin(i*3.0*uv.y+t);uv.y+=0.4/i*cos(i*3.0*uv.x+t);col+=0.006/abs(sin(t+uv.y+uv.x));}gl_FragColor=vec4(col*vec3(0.1,0.3,0.7),1.0);}</script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, doc, updateDoc, onSnapshot, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // --- NAV ---
+    window.toggleMenu = function(){document.getElementById('sideMenu').classList.toggle('open');document.getElementById('menuOverlay').classList.toggle('show');}
+    window.showView = function(view){document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active'));document.querySelectorAll('.menu-link-item').forEach(m=>m.classList.remove('active'));document.getElementById('view-'+view).classList.add('active');document.getElementById('nav-'+view).classList.add('active');document.getElementById('sideMenu').classList.remove('open');document.getElementById('menuOverlay').classList.remove('show');if(view==='midway') updateMidwayLiveStatus(); if(view==='passenger'&&window.passengerMap) setTimeout(()=>window.passengerMap.invalidateSize(),200);}
+    window.switchMidwayTab = function(tab){document.querySelectorAll('.sched-tab').forEach(t=>t.classList.remove('active'));document.getElementById('tab-'+tab).classList.add('active');document.getElementById('sched-weekday').style.display=tab==='weekday'?'block':'none';document.getElementById('sched-saturday').style.display=tab==='saturday'?'block':'none';document.getElementById('sched-sunday').style.display=tab==='sunday'?'block':'none';updateMidwayLiveStatus();}
+
+    // --- MIDWAY LIVE + BOOK LOGIC ---
+    const MIDWAY_SCHEDULE = {
+      weekday: ["04:45","06:00","07:25","08:45","10:15","11:35","13:25","15:05","16:15","17:50","19:05"],
+      saturday: ["07:00","09:40","12:30","16:20","19:05"],
+      sunday: ["08:00","10:35","13:20","16:05"]
+    };
+    function getDayType(){const d=new Date().getDay(); if(d===0) return 'sunday'; if(d===6) return 'saturday'; return 'weekday';}
+    function timeToMinutes(t){const [h,m]=t.split(':').map(Number); return h*60+m;}
+    function format12h(t24){let [h,m]=t24.split(':').map(Number);const ap=h>=12?'PM':'AM';h=h%12||12;return `${h}:${String(m).padStart(2,'0')} ${ap}`;}
+
+    window.setServiceType = function(type){
+      document.getElementById('serviceType').value=type;
+      document.getElementById('btnLocal').classList.toggle('active', type==='local');
+      document.getElementById('btnMidway').classList.toggle('active', type==='midway');
+      document.getElementById('midwayBookingBox').style.display = type==='midway'? 'block' : 'none';
+      if(type==='midway') populateMidwayTimes();
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background: #000; overflow: hidden; height: 100vh; height: 100dvh; color: white; display: flex; justify-content: center; align-items: center; }
 
-    #canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
-
-   .app-container {
-      position: relative;
-      width: 100vw; height: 100vh;
-      max-width: 430px; max-height: 932px;
-      z-index: 10;
-      overflow-y: auto;
-      scrollbar-width: none;
-      background: rgba(15,15,20,0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      display: flex; flex-direction: column;
-    }
-   .app-container::-webkit-scrollbar { display: none; }
-    @media (min-width: 431px) {
-     .app-container { border: 10px solid #1e293b; border-radius: 48px; height: 90vh; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+    function populateMidwayTimes(){
+      const dir = document.getElementById('midwayDirection').value;
+      const dayType = getDayType();
+      const times = MIDWAY_SCHEDULE[dayType];
+      const select = document.getElementById('midwayTimeSelect');
+      select.innerHTML = times.map(t=>`<option value="${t}">${format12h(t)} - ${dayType}</option>`).join('');
+      updateMidwayBookingInfo();
     }
 
-    #sideMenu {
-      position: fixed; top: 50%; left: 50%;
-      width: 88%; max-width: 320px; max-height: 82vh;
-      background: rgba(18, 18, 22, 0.98); backdrop-filter: blur(30px);
-      -webkit-backdrop-filter: blur(30px);
-      z-index: 20000; display: flex; flex-direction: column;
-      padding: 28px 20px 20px;
-      border: 1px solid rgba(255,255,255,0.12); border-radius: 28px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.05) inset;
-      transform: translate(-50%, -50%) scale(0.9); opacity: 0; visibility: hidden;
-      transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    function updateMidwayBookingInfo(){
+      const t = document.getElementById('midwayTimeSelect').value;
+      const stop = document.getElementById('midwayStop').value;
+      const dir = document.getElementById('midwayDirection').value;
+      if(!t) return;
+      const info = document.getElementById('midwayInfo');
+      if(dir==='toMidway') info.textContent = `Pickup at ${stop} at ${format12h(t)} → Drop Midway Airport`;
+      else info.textContent = `Pickup at Midway Airport at ${format12h(t)} → Drop ${stop}`;
+      // auto fill main fields
+      const pickupEl = document.getElementById('pickupLocation');
+      const dropEl = document.getElementById('dropoffLocation');
+      const timeEl = document.getElementById('pickupTime');
+      if(dir==='toMidway'){ pickupEl.value=stop; dropEl.value='Midway Airport (Chicago)'; }
+      else { pickupEl.value='Midway Airport (Chicago)'; dropEl.value=stop; }
+      timeEl.value=t;
     }
-    #sideMenu.open { transform: translate(-50%, -50%) scale(1); opacity: 1; visibility: visible; }
-   .menu-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); opacity: 0; visibility: hidden; z-index: 15000; transition: 0.35s; }
-   .menu-overlay.show { opacity: 1; visibility: visible; }
-   .menu-link-item {
-      font-size: 1.05rem; font-weight: 800; color: #94a3b8;
-      padding: 16px 16px; margin-bottom: 10px; border-radius: 16px;
-      display: block; transition: 0.25s; text-decoration: none;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); text-align: center; cursor: pointer;
+
+    document.getElementById('midwayDirection')?.addEventListener('change', populateMidwayTimes);
+    document.getElementById('midwayStop')?.addEventListener('change', updateMidwayBookingInfo);
+    document.getElementById('midwayTimeSelect')?.addEventListener('change', updateMidwayBookingInfo);
+
+    window.bookMidwayTrip = function(pickup, dropoff, time24, arriveStr){
+      // set to midway mode
+      setServiceType('midway');
+      document.getElementById('pickupLocation').value = pickup;
+      document.getElementById('dropoffLocation').value = dropoff;
+      document.getElementById('pickupTime').value = time24;
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('tripDate').value = today;
+      // jump to passenger view
+      showView('passenger');
+      // scroll to form
+      setTimeout(()=>{ document.getElementById('view-passenger').scrollTop = 400; }, 200);
+      showAppAlert(`Midway trip selected: ${pickup} → ${dropoff} at ${format12h(time24)} ${arriveStr? '(Arrives '+arriveStr+')':''}. Enter name + phone and submit.`, "Midway Booked");
     }
-   .menu-link-item.active { color: white; background: rgba(59,130,246,0.20); border-color: rgba(59,130,246,0.4); }
-   .menu-link-item:hover { color: white; background: rgba(255,255,255,0.10); transform: scale(1.02); }
-   .popup-close-btn { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; border-radius: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: white; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 18px; }
 
-   .burger-btn { position: fixed; top: calc(12px + env(safe-area-inset-top)); right: 12px; z-index: 16000; width: 42px; height: 42px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; border-radius: 12px; background: rgba(20,20,20,0.9); border: 1px solid rgba(255,255,255,0.15); cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5); backdrop-filter: blur(12px); }
-   .burger-line { width: 18px; height: 2px; background: white; border-radius: 2px; display: block; }
-   .burger-line.short { width: 11px; }
+    window.updateMidwayLiveStatus = function(){
+      const now=new Date(); const dayType=getDayType(); const currentMins=now.getHours()*60+now.getMinutes();
+      const tables=document.querySelectorAll('.sched-table'); tables.forEach(tbl=>{tbl.querySelectorAll('tr').forEach(tr=>tr.classList.remove('next-bus-row'));});
+      const banner=document.getElementById('midwayLiveBanner'); const todaysTable=document.querySelector(`#sched-${dayType} table, #sched-${dayType}.sched-table`); // fallback
+      const actualTable = document.querySelector(`#sched-${dayType}.sched-table`) || document.querySelector(`#sched-${dayType} table`);
+      if(!actualTable) return;
+      let nextRow=null; let nextTimeStr=null;
+      actualTable.querySelectorAll('tbody tr').forEach(tr=>{const t=tr.getAttribute('data-time'); if(!nextRow && t && timeToMinutes(t)>=currentMins){nextRow=tr; nextTimeStr=t;}});
+      const firstBusTimes={weekday:timeToMinutes('04:45'),saturday:timeToMinutes('07:00'),sunday:timeToMinutes('08:00')}; const lastBusTimes={weekday:timeToMinutes('19:05'),saturday:timeToMinutes('19:05'),sunday:timeToMinutes('16:05')};
+      if(!nextRow){ banner.className='midway-status-banner closed'; banner.innerHTML=`🔴 We are closed — No more Midway buses today. Resumes ${dayType==='saturday'?'Sunday 8:00 AM':dayType==='sunday'?'Monday 4:45 AM':'tomorrow'}.`; }
+      else if(currentMins < firstBusTimes[dayType]){ const diff=firstBusTimes[dayType]-currentMins; banner.className='midway-status-banner closed'; banner.innerHTML=`🕒 We are closed — Opens today at ${dayType==='weekday'?'4:45 AM':dayType==='saturday'?'7:00 AM':'8:00 AM'}. First bus in ${diff} min`; }
+      else { nextRow.classList.add('next-bus-row'); const minsUntil=timeToMinutes(nextTimeStr)-currentMins; banner.className='midway-status-banner open'; banner.innerHTML=`🟢 OPEN • Next bus ${format12h(nextTimeStr)} • In ${minsUntil} min • Arrives Midway ${nextRow.getAttribute('data-midarr')||''}`; setTimeout(()=>nextRow.scrollIntoView({behavior:'smooth',block:'center'}),400); }
+    }
+    setInterval(updateMidwayLiveStatus,60000);
 
-    #splash { position: fixed; inset: 0; background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 30000; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-   .loader-progress { width: 40%; height: 100%; background: #3b82f6; animation: loading 1.5s infinite ease-in-out; }
-    @keyframes loading { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }
+    // BG + splash
+    const canvas=document.getElementById('canvas'); const gl=canvas.getContext('webgl'); function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;gl.viewport(0,0,canvas.width,canvas.height);} window.addEventListener('resize',resize);resize(); const program=gl.createProgram(); const vs=gl.createShader(gl.VERTEX_SHADER); gl.shaderSource(vs,document.getElementById('vertexShader').textContent); gl.compileShader(vs); const fs=gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs,document.getElementById('fragmentShader').textContent); gl.compileShader(fs); gl.attachShader(program,vs); gl.attachShader(program,fs); gl.linkProgram(program); const posLoc=gl.getAttribLocation(program,'position'); const uTime=gl.getUniformLocation(program,'uTime'); const uRes=gl.getUniformLocation(program,'uResolution'); const buf=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buf); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),gl.STATIC_DRAW); function render(t){gl.useProgram(program);gl.uniform1f(uTime,t*0.001);gl.uniform2f(uRes,canvas.width,canvas.height);gl.enableVertexAttribArray(posLoc);gl.vertexAttribPointer(posLoc,2,gl.FLOAT,false,0,0);gl.drawArrays(gl.TRIANGLE_STRIP,0,4);requestAnimationFrame(render);} requestAnimationFrame(render); setTimeout(()=>{const s=document.getElementById('splash');s.style.opacity='0';s.style.transform='scale(1.1)';setTimeout(()=>{s.style.display='none';updateMidwayLiveStatus();populateMidwayTimes();},800);},1800);
 
-   .view-section { display: none; flex: 1; flex-direction: column; overflow-y: auto; }
-   .view-section.active { display: flex; }
-    #view-passenger { background: var(--rvm-bg-light); color: var(--text-dark); }
-    #view-midway { padding: 20px; padding-top: 56px; padding-bottom: 32px; }
-
-   .p-header { background: #FFFFFF; color: var(--rvm-navy); padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-bottom: 1px solid var(--rvm-border); flex-shrink: 0; }
-   .p-brand { font-size: 1.05rem; font-weight: 800; display: flex; align-items: center; gap: 10px; }
-   .p-content { padding: 16px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 16px; }
-
-   .glass-card { background: rgba(255,255,255,0.06); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 2rem; }
-   .light-card { background: white; border-radius: 16px; padding: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.06); border: 1px solid var(--rvm-border); }
-   .input-field { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid var(--rvm-border); font-size: 0.9rem; outline: none; transition: 0.2s; background: white; color: var(--text-dark); }
-   .input-field:focus { border-color: var(--rvm-blue); box-shadow: 0 0 0 3px rgba(0,90,156,0.15); }
-   .gold-btn { background: var(--rvm-gold); color: var(--rvm-navy); border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; width: 100%; transition: 0.2s; text-transform: uppercase; letter-spacing: 0.5px; }
-   .gold-btn:hover { background: var(--rvm-gold-hover); }
-   .outline-btn { background: white; color: var(--rvm-blue); border: 1.5px solid var(--rvm-blue); padding: 10px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; width: 100%; }
-   .trip-card { background: white; border-radius: 12px; padding: 14px; border-left: 4px solid var(--rvm-blue); box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 10px; }
-   .status-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-   .app-alert-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 3000; backdrop-filter: blur(3px); }
-   .app-alert-overlay.active { display: flex; }
-   .app-alert-card { background: white; padding: 24px; border-radius: 16px; width: 340px; max-width: 90%; box-shadow: 0 16px 32px rgba(0,0,0,0.2); text-align: center; color: var(--text-dark); }
-   .leaflet-container { border-radius: 12px; }
-
-    /* Midway schedule specific */
-   .sched-tabs { display:flex; gap:8px; margin-bottom:14px; }
-   .sched-tab { flex:1; padding:
+    // Firebase unchanged
+    let db; try{const originalConfig={apiKey:"AIzaSyA7r1o4j2e4f6e6",authDomain:"rvm-demo.firebaseapp.com",projectId:"rvm-demo"};const app=initializeApp(originalConfig);db=getFirestore(app);}catch(e){} let firebaseApp; try{firebaseApp=initializeApp({apiKey:"AIzaSyDemo-Replace-With-Your-Key",authDomain:"rvm-passenger.firebaseapp.com",projectId:"rvm-passenger",storageBucket:"rvm-passenger.appspot.com",messagingSenderId:"0000000000",appId:"1:0000000000:web:000000"},"secondary");db=getFirestore(firebaseApp);}catch(e){if(!db){try{db=getFirestore();}catch(e2){}}}
+    window.showAppAlert=(msg,title="Notice")=>{document.getElementById('appAlertTitle').textContent=title;document.getElementById('appAlertMessage').textContent=msg;document.getElementById('appAlertOverlay').classList.add('active');}; window.closeAppAlert=()=>document.getElementById('appAlertOverlay').classList.remove('active');
+    window.passengerMap=null; let trackerMarker=null; function initMap(){if(window.passengerMap) return; const mapEl=document.getElementById('trackerMap'); if(!mapEl) return; window.passengerMap=L.map('trackerMap').setView([41.12,-87.86],12); L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM'}).addTo(window.passengerMap);}
+    let activeDocId=null; let currentPassengerPhone=null; let currentPassengerName=null;
+    window.updateTrackerBox=(data)=>{const box=document.getElementById('trackerBox');const details=document.getElementById('trackerDetails');const badge=document.getElementById('liveStatusBadge');if(!data){box.style.display='none';return;}box.style.display='block';initMap();badge.textContent=data.status||'Pending';let color='#FEF3C7';let textColor='#92400E';if((data.status||'').toLowerCase().includes('en route')){color='#DBEAFE';textColor='#1E40AF';}if((data.status||'').toLowerCase().includes('picked')){color='#D1FAE5';textColor='#065F46';}if((data.status||'').toLowerCase().includes('cancelled')){color='#FEE2E2';textColor='#991B1B';}badge.style.background=color;badge.style.color=textColor;details.innerHTML=`<div><b>${data.pickupLocation||''}</b> → <b>${data.dropoffLocation||''}</b></div><div style="color:#64748B;margin-top:4px;">${data.tripDate||''} at ${data.pickupTime||''} ${data.isRoundTrip?' • Round trip '+(data.returnPickupTime||'') : ''} ${data.serviceType? ' • '+data.serviceType:''}</div>`;if(window.passengerMap){setTimeout(()=>{window.passengerMap.invalidateSize();if(data.lat&&data.lng){if(trackerMarker) window.passengerMap.removeLayer(trackerMarker);trackerMarker=L.marker([data.lat,data.lng]).addTo(window.passengerMap);window.passengerMap.setView([data.lat,data.lng],14);}},300);}}
+    function startListeningAllTrips(){if(!db||!currentPassengerPhone) return; try{const q=query(collection(db,"rvm_requests"),where("phoneNormalized","==",currentPassengerPhone));onSnapshot(q,(snap)=>{const list=document.getElementById('myTripsList');const trips=[];snap.forEach(d=>trips.push({id:d.id,...d.data()}));if(trips.length===0){list.style.display='none';return;}list.style.display='block';trips.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));list.innerHTML=trips.map(t=>`<div class="trip-card"><div style="display:flex;justify-content:space-between;align-items:center;"><b style="font-size:0.85rem;">${t.pickupLocation||''} → ${t.dropoffLocation||''}</b><span class="status-badge" style="background:#E0F2FE;color:#0C4A6E;font-size:0.6rem;">${t.status||'Pending'}</span></div><div style="font-size:0.75rem;color:#64748B;margin-top:4px;">${t.tripDate||''} ${t.pickupTime||''} ${t.serviceType? '• '+t.serviceType:''}</div><div style="display:flex;gap:6px;margin-top:8px;"><button onclick="window.editTrip('${t.id}')" style="flex:1;background:#F1F5F9;border:1px solid #CBD5E1;padding:6px;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;">Edit</button><button onclick="window.trackTrip('${t.id}')" style="flex:1;background:var(--rvm-navy);color:white;border:none;padding:6px;border-radius:8px;font-size:0.75rem;font-weight:700;cursor:pointer;">Track</button></div></div>`).join('');});}catch(e){}}
+    window.editTrip=async(id)=>{if(!db){showAppAlert("Demo mode - Firebase not configured.");return;}try{const snap=await getDocs(query(collection(db,"rvm_requests"),where("__name__","==",id)));let data=null;snap.forEach(d=>data=d.data());if(!data){const {getDoc}=await import("https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js");const dSnap=await getDoc(doc(db,"rvm_requests",id));if(dSnap.exists()) data=dSnap.data();}if(!data) return;document.getElementById('editingTripId').value=id;document.getElementById('passengerName').value=data.passengerName||'';document.getElementById('passengerPhone').value=data.passengerPhone||'';document.getElementById('pickupLocation').value=data.pickupLocation||'';document.getElementById('dropoffLocation').value=data.dropoffLocation||'';document.getElementById('tripDate').value=data.tripDate||'';document.getElementById('pickupTime').value=data.pickupTime||'';document.getElementById('isRoundTrip').checked=!!data.isRoundTrip;document.getElementById('returnTimeGroup').style.display=data.isRoundTrip?'block':'none';document.getElementById('returnPickupTime').value=data.returnPickupTime||'';document.getElementById('serviceType').value=data.serviceType||'local';setServiceType(data.serviceType||'local');document.getElementById('requestPanelTitle').textContent='Edit Trip';document.getElementById('submitTripBtn').textContent='UPDATE TRIP';}catch(e){}}
+    window.trackTrip=(id)=>{activeDocId=id;document.getElementById('trackerBox').style.display='block';try{onSnapshot(doc(db,"rvm_requests",id),(docSnap)=>{if(docSnap.exists()) updateTrackerBox(docSnap.data());});}catch(e){showAppAlert("Tracking requires Firebase config");}document.getElementById('view-passenger').scrollTop=0;}
+    document.getElementById('lookupBtn')?.addEventListener('click',()=>{const phone=document.getElementById('lookupPhone').value.trim().replace(/[^0-9]/g,'');if(!phone){showAppAlert("Enter your phone number");return;}currentPassengerPhone=phone;document.getElementById('passengerPhone').value=document.getElementById('lookupPhone').value;startListeningAllTrips();showAppAlert("Loaded trips for "+phone);});
+    const today=new Date().toISOString().split('T')[0];document.getElementById('tripDate').value=today;document.getElementById('tripDate').min=today;
+    document.getElementById('resetFormBtn')?.addEventListener('click',()=>{document.getElementById('editingTripId').value='';document.getElementById('requestPanelTitle').textContent='Request a New Ride';document.getElementById('submitTripBtn').textContent='SUBMIT RIDE REQUEST';document.getElementById('returnTimeGroup').style.display='none';document.getElementById('trackerBox').style.display='none';activeDocId=null;document.getElementById('passengerTripForm').reset();document.getElementById('tripDate').value=today;setServiceType('local');});
+    document.getElementById('passengerTripForm').addEventListener('submit',async(e)=>{e.preventDefault();if(!db){showAppAlert("Demo Mode: Paste your Firebase config.");return;}const editingId=document.getElementById('editingTripId').value;const passengerName=document.getElementById('passengerName').value.trim();const passengerPhone=document.getElementById('passengerPhone').value.trim();const pickupLocation=document.getElementById('pickupLocation').value.trim();const dropoffLocation=document.getElementById('dropoffLocation').value.trim();const tripDate=document.getElementById('tripDate').value;const pickupTime=document.getElementById('pickupTime').value;const isRoundTrip=document.getElementById('isRoundTrip').checked;const returnPickupTime=isRoundTrip?document.getElementById('returnPickupTime').value:null;const serviceType=document.getElementById('serviceType').value;try{if(editingId){await updateDoc(doc(db,"rvm_requests",editingId),{passengerName,passengerPhone,pickupLocation,dropoffLocation,tripDate,pickupTime,isRoundTrip,returnPickupTime,serviceType,updatedAt:new Date().toISOString(),updatedBy:'passenger'});showAppAlert("Trip updated!");document.getElementById('editingTripId').value='';document.getElementById('requestPanelTitle').textContent='Request a New Ride';document.getElementById('submitTripBtn').textContent='SUBMIT RIDE REQUEST';}else{const phoneNorm=passengerPhone.replace(/[^0-9]/g,'');const docRef=await addDoc(collection(db,"rvm_requests"),{passengerName,passengerPhone,phone:passengerPhone,phoneNormalized:phoneNorm,pickupLocation,dropoffLocation,tripDate,pickupTime,isRoundTrip,returnPickupTime,serviceType,status:'Pending Pickup',createdAt:new Date().toISOString()});activeDocId=docRef.id;try{await addDoc(collection(db,"rvm_passengers"),{passengerName,name:passengerName,phone:passengerPhone,phoneNormalized:phoneNorm,address:pickupLocation,homeAddress:pickupLocation,tripDate,defaultDate:tripDate,accountType:'phone',createdAt:new Date().toISOString(),createdVia:'passenger_app'});}catch(e){}showAppAlert("Trip submitted! "+ (serviceType==='midway'? 'Midway Commuter bus booked.' : ''));document.getElementById('trackerBox').style.display='block';onSnapshot(doc(db,"rvm_requests",activeDocId),(docSnap)=>{if(docSnap.exists()) updateTrackerBox(docSnap.data());});if(!currentPassengerName){currentPassengerName=passengerName.toLowerCase();currentPassengerPhone=phoneNorm;startListeningAllTrips();}}}catch(err){showAppAlert("Error saving trip");}});
+    document.getElementById('useCurrentLocationBtn')?.addEventListener('click',()=>{if(!navigator.geolocation){showAppAlert("Geolocation not supported");return;}const btn=document.getElementById('useCurrentLocationBtn');btn.textContent="Locating...";navigator.geolocation.getCurrentPosition(async(pos)=>{btn.textContent="📍 Use Current Location";const lat=pos.coords.latitude,lon=pos.coords.longitude;try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);const d=await r.json();document.getElementById('pickupLocation').value=d?.display_name||`${lat.toFixed(4)}, ${lon.toFixed(4)}`;showAppAlert("Location set!");}catch{document.getElementById('pickupLocation').value=`${lat.toFixed(4)}, ${lon.toFixed(4)}`;}},()=>{btn.textContent="📍 Use Current Location";showAppAlert("Location denied");},{enableHighAccuracy:true,timeout:10000});});
+    document.getElementById('isRoundTrip')?.addEventListener('change',(e)=>{document.getElementById('returnTimeGroup').style.display=e.target.checked?'block':'none';});
+    document.getElementById('cancelRideBtn')?.addEventListener('click',async()=>{if(!activeDocId) return;if(!confirm("Cancel this ride?")) return;try{await updateDoc(doc(db,"rvm_requests",activeDocId),{status:'Cancelled',cancelledAt:new Date().toISOString()});showAppAlert("Ride cancelled");}catch(e){showAppAlert("Cancel failed");}});
+  </script>
+</body>
+</html>
