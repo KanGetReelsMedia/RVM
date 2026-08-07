@@ -2,7 +2,7 @@
   "id": "/RVM/",
   "name": "River Valley Metro Hub",
   "short_name": "Metro Hub",
-  "description": "River Valley Metro - Live dispatch & passenger tracking",
+  "description": "River Valley Metro - Live bus tracking for passengers",
   "start_url": "/RVM/",
   "scope": "/RVM/",
   "display": "standalone",
