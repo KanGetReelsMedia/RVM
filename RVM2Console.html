@@ -1,7 +1,116 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+window.RVM_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCRDkusyC05EzBiT8ZBj8JpZd8E5qVd-4g",
+  authDomain: "rvm-software-manifest.firebaseapp.com",
+  databaseURL: "https://rvm-software-manifest-default-rtdb.firebaseio.com",
+  projectId: "rvm-software-manifest",
+  storageBucket: "rvm-software-manifest.firebasestorage.app",
+  messagingSenderId: "246377591660",
+  appId: "1:246377591660:web:459adf1087bd84ca36b949",
+  measurementId: "G-NH6DZ0S23K"
+};
+if(!firebase.apps.length){ firebase.initializeApp(window.RVM_FIREBASE_CONFIG); }
+window.rvm_db = firebase.firestore();
+window.rvm_rtdb = firebase.database();
+
+// HARD BLOCK 2501 - delete if exists
+function rvm_nuke2501(){
+  try{
+    window.rvm_rtdb.ref('buses/2501').remove();
+    window.rvm_rtdb.ref('buses/2501 ').remove();
+    window.rvm_db.collection('buses').doc('2501').delete().catch(()=>{});
+    window.rvm_db.collection('buses').doc('2501').set({status:'blocked', blocked:true, timestamp:Date.now()}, {merge:true}).then(()=>{window.rvm_db.collection('buses').doc('2501').delete();});
+    console.log('[BLOCK] 2501 nuked');
+  }catch(e){}
+}
+setTimeout(rvm_nuke2501, 1000);
+setInterval(rvm_nuke2501, 10000);
+
+window.rvm_pushBus = function(bus){
+  try{
+    const rawId = String(bus.id || bus.busNum || '').trim();
+    if(!rawId) return;
+    if(rawId==='2501'){ console.warn('Blocked 2501'); rvm_nuke2501(); return; }
+    const id = rawId;
+    // Get route from global selector or bus object
+    const routeSelector = document.getElementById('rvm-route-select-global');
+    const routeValue = bus.route || bus.assignedRoute || (routeSelector? routeSelector.value : '') || localStorage.getItem('rvm_last_route') || 'Not Assigned';
+    if(routeValue) localStorage.setItem('rvm_last_route', routeValue);
+    const payload = {
+      id: id,
+      busNumber: bus.busNum || bus.busNumber || id,
+      number: bus.busNum || bus.busNumber || id,
+      route: routeValue,
+      assignedRoute: routeValue,
+      routeName: routeValue,
+      model: bus.model || '',
+      status: 'in_service',
+      lat: bus.lat || 41.12 + (Math.random()-0.5)*0.08,
+      lng: bus.lng || -87.86 + (Math.random()-0.5)*0.08,
+      driver: bus.driver || '',
+      capacity: bus.capacity || 32,
+      imei: bus.imei || '',
+      timestamp: Date.now(),
+      assignedAt: new Date().toISOString(),
+      lastRouteChange: new Date().toISOString(),
+      dailyRoute: true
+    };
+    window.rvm_db.collection('buses').doc(String(id)).set(payload, {merge:true});
+    window.rvm_rtdb.ref('buses/'+String(id)).set(payload);
+    console.log('[DISPATCH] Pushed bus with route', id, payload.route);
+  }catch(e){ console.error('Bridge push failed', e); }
+};
+
+window.rvm_updateRoute = function(busId, newRoute){
+  try{
+    if(String(busId)==='2501'){ rvm_nuke2501(); return; }
+    const payload = { route: newRoute, assignedRoute: newRoute, routeName: newRoute, lastRouteChange: new Date().toISOString(), timestamp: Date.now() };
+    window.rvm_db.collection('buses').doc(String(busId)).set(payload, {merge:true});
+    window.rvm_rtdb.ref('buses/'+String(busId)).update(payload);
+    console.log('[DISPATCH] Route changed', busId, newRoute);
+  }catch(e){console.error(e)}
+};
+
+window.rvm_removeBus = function(id){
+  try{
+    if(String(id)==='2501'){ rvm_nuke2501(); return; }
+    window.rvm_db.collection('buses').doc(String(id)).set({status:'offline', id:String(id), timestamp:Date.now()}, {merge:true});
+    window.rvm_rtdb.ref('buses/'+String(id)).remove();
+  }catch(e){ console.error(e); }
+};
+</script>
+<style>
+#rvm-daily-route-bar{position:sticky;top:0;z-index:50;background:#0a0a0a;color:#fff;padding:10px 14px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #27272a}
+#rvm-daily-route-bar label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.8}
+#rvm-route-select-global{background:#1a1a1a;color:#fff;border:1px solid #333;border-radius:8px;padding:8px 12px;font-size:13px;font-weight:600;min-width:180px}
+#rvm-route-select-global:focus{border-color:#fff;outline:none}
+.rvm-route-edit{margin-top:6px;display:flex;gap:6px}
+.rvm-route-edit select{flex:1;background:#fff;border:1px solid #e5e5e5;border-radius:8px;padding:6px 8px;font-size:12px}
+.rvm-route-edit button{background:#000;color:#fff;border:none;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:700;cursor:pointer}
+</style>
+<div id="rvm-daily-route-bar">
+  <label>Daily Route Assignment:</label>
+  <select id="rvm-route-select-global">
+    <option value="Not Assigned">Select Route...</option>
+    <option value="Route 1 - Main St">Route 1 - Main St</option>
+    <option value="Route 2 - Limestone">Route 2 - Limestone</option>
+    <option value="Route 3 - Court St">Route 3 - Court St</option>
+    <option value="Route 4 - Manteno">Route 4 - Manteno</option>
+    <option value="Route 5 - Bradley">Route 5 - Bradley</option>
+    <option value="Route 6 - Kankakee CC">Route 6 - Kankakee CC</option>
+    <option value="Route 10 - Bourbonnais">Route 10 - Bourbonnais</option>
+    <option value="Route 11 - Northfield">Route 11 - Northfield</option>
+  </select>
+  <span style="font-size:11px;opacity:.6">This route will attach to any bus you put online. Change daily as needed.</span>
+</div>
+
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -249,7 +358,7 @@ Error generating stack: `+o.message+`
             <div><b>Traccar ID:</b> ${b.traccarId||"—"}</div>
           </div>
         </div>
-      `),C.current.push(lu),oe.extend([b.lat,b.lng])}),s.length>0)L.fitBounds(oe,{padding:[40,40],maxZoom:13}),setTimeout(()=>L.invalidateSize(),100)},[s,i]),Z.useEffect(()=>{try{localStorage.setItem('rvm_fleet',JSON.stringify(s))}catch(e){}},[s]),Z.useEffect(()=>{try{localStorage.setItem('rvm_assign',JSON.stringify(asgn))}catch(e){}},[asgn]),Z.useEffect(()=>{try{localStorage.setItem('rvm_theme',th);document.documentElement.setAttribute('data-theme',th)}catch(e){}},[th]),Z.useEffect(()=>{try{document.documentElement.setAttribute('data-theme',th)}catch(e){}},[]);let x=(p)=>{if(p.preventDefault(),!T.busNum.trim()||!T.imei.trim()||!T.iccid.trim())return;if(ei){let b={id:ei};f((L)=>L.map((oe)=>oe.id===ei?{...oe,busNum:T.busNum.trim(),model:T.model,imei:T.imei.trim(),iccid:T.iccid.trim(),apn:T.apn.trim()||"hologram",traccarId:T.traccarId.trim(),traccarUrl:T.traccarUrl.trim(),notes:T.notes.trim()}:oe)),si(null)}else{let L=41.1200+(Math.random()-0.5)*0.32,oe=-87.8600+(Math.random()-0.5)*0.42,b={id:Date.now().toString(),busNum:T.busNum.trim(),model:T.model,imei:T.imei.trim(),iccid:T.iccid.trim(),apn:T.apn.trim()||"hologram",traccarId:T.traccarId.trim(),traccarUrl:T.traccarUrl.trim(),notes:T.notes.trim(),lat:L,lng:oe,status:"in_service"};try{window.rvm_pushBus(b)}catch(e){} f(($e)=>[...$e,b])}c({busNum:"",model:tu[0],imei:"",iccid:"",apn:"hologram",traccarId:"",traccarUrl:"https://demo.traccar.org",notes:""}),u("fleet")},Ed=(p)=>{let b=s.find((L)=>L.id===p);if(!b)return;c({busNum:b.busNum,model:b.model,imei:b.imei,iccid:b.iccid,apn:b.apn,traccarId:b.traccarId,traccarUrl:b.traccarUrl,notes:b.notes}),si(b.id),u("add")},A=(p)=>{try{window.rvm_removeBus(p)}catch(e){} f((L)=>L.filter((oe)=>oe.id!==p))};if(!e)return E("div",{className:"min-h-screen bg-[#fcfcfc] text-[#0a0a0a] flex items-center justify-center p-4",children:[m("style",{children:`
+      `),C.current.push(lu),oe.extend([b.lat,b.lng])}),s.length>0)L.fitBounds(oe,{padding:[40,40],maxZoom:13}),setTimeout(()=>L.invalidateSize(),100)},[s,i]),Z.useEffect(()=>{try{localStorage.setItem('rvm_fleet',JSON.stringify(s))}catch(e){}},[s]),Z.useEffect(()=>{try{localStorage.setItem('rvm_assign',JSON.stringify(asgn))}catch(e){}},[asgn]),Z.useEffect(()=>{try{localStorage.setItem('rvm_theme',th);document.documentElement.setAttribute('data-theme',th)}catch(e){}},[th]),Z.useEffect(()=>{try{document.documentElement.setAttribute('data-theme',th)}catch(e){}},[]);let x=(p)=>{if(p.preventDefault(),!T.busNum.trim()||!T.imei.trim()||!T.iccid.trim())return;if(ei){let b={id:ei};f((L)=>L.map((oe)=>oe.id===ei?{...oe,busNum:T.busNum.trim(),model:T.model,imei:T.imei.trim(),iccid:T.iccid.trim(),apn:T.apn.trim()||"hologram",traccarId:T.traccarId.trim(),traccarUrl:T.traccarUrl.trim(),notes:T.notes.trim()}:oe)),si(null)}else{let L=41.1200+(Math.random()-0.5)*0.32,oe=-87.8600+(Math.random()-0.5)*0.42,b={id:Date.now().toString(),busNum:T.busNum.trim(),model:T.model,imei:T.imei.trim(),iccid:T.iccid.trim(),apn:T.apn.trim()||"hologram",traccarId:T.traccarId.trim(),traccarUrl:T.traccarUrl.trim(),notes:T.notes.trim(),lat:L,lng:oe,status:"in_service"};try{window.rvm_pushBus(b)}catch(e){} f(($e)=>[...$e,b])}c({busNum:"",model:tu[0],imei:"",iccid:"",apn:"hologram",traccarId:"",traccarUrl:"https://demo.traccar.org",notes:""}),u("fleet")},Ed=(p)=>{let b=s.find((L)=>L.id===p);if(!b)return;c({busNum:b.busNum,model:b.model,imei:b.imei,iccid:b.iccid,apn:b.apn,traccarId:b.traccarId,traccarUrl:b.traccarUrl,notes:b.notes}),si(b.id),u("add")},A=(p)=>{try{window.rvm_removeBus(p)}catch(e){} try{window.rvm_removeBus(p)}catch(e){} f((L)=>L.filter((oe)=>oe.id!==p))};if(!e)return E("div",{className:"min-h-screen bg-[#fcfcfc] text-[#0a0a0a] flex items-center justify-center p-4",children:[m("style",{children:`
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
           * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         `}),E("div",{className:"w-full max-w-[380px]",children:[E("div",{className:"mb-8 text-center",children:[m("div",{className:"inline-flex items-center justify-center w-12 h-12 rounded-[12px] bg-[#0a0a0a] text-white font-[800] text-[18px] tracking-[-0.02em] mb-4",children:"RVM"}),m("h1",{className:"text-[22px] font-[800] tracking-[-0.03em] text-[#0a0a0a]",children:"Welcome To"}),m("p",{className:"text-[13px] text-[#6b6b6b] mt-1 font-[500]",children:"Fleet tracking & Operations"})]}),m("form",{onSubmit:z,className:"bg-white border border-[#e8e8e8] rounded-[16px] p-6 shadow-[0_8px_32px_rgba(0,0,0,0.06)]",children:E("div",{className:"space-y-4",children:[E("div",{children:[m("label",{className:"block text-[11px] font-[700] tracking-[0.08em] uppercase text-[#8a8a8a] mb-2",children:"Username"}),m("input",{value:t.username,onChange:(p)=>r((L)=>({...L,username:p.target.value})),className:"w-full h-[44px] px-3 rounded-[10px] border border-[#e0e0e0] bg-white text-[14px] font-[500] text-[#0a0a0a] outline-none focus:border-[#0a0a0a] focus:ring-[3px] focus:ring-[#0a0a0a]/10 transition-all",placeholder:"username",autoFocus:!0})]}),E("div",{children:[m("label",{className:"block text-[11px] font-[700] tracking-[0.08em] uppercase text-[#8a8a8a] mb-2",children:"Password"}),m("input",{type:"password",value:t.password,onChange:(p)=>r((L)=>({...L,password:p.target.value})),className:"w-full h-[44px] px-3 rounded-[10px] border border-[#e0e0e0] bg-white text-[14px] font-[500] text-[#0a0a0a] outline-none focus:border-[#0a0a0a] focus:ring-[3px] focus:ring-[#0a0a0a]/10 transition-all",placeholder:"••••••••"})]}),l&&m("div",{className:"bg-[#0a0a0a] text-white text-[13px] font-[500] px-3 py-2.5 rounded-[10px]",children:l}),m("button",{type:"submit",className:"w-full h-[44px] rounded-[10px] bg-[#0a0a0a] text-white text-[14px] font-[600] tracking-[-0.01em] hover:bg-black transition-colors",children:"Sign in"})]})}),m("div",{className:"mt-4 text-center text-[11px] text-[#9a9a9a] font-[500]",children:"Secure Log In system"})]})]});return E("div",{className:"min-h-screen bg-[#f7f7f5] text-[#0a0a0a] flex flex-col",children:[m("style",{children:`
