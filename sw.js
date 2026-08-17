@@ -1,58 +1,68 @@
-const CACHE = 'rvm-v2';
+const CACHE = 'rvm-v3';
+// Only cache what we KNOW exists - don't crash if offline.html missing
 const CORE_ASSETS = [
-  '/RVM/',
-  '/RVM/index.html',
-  '/RVM/offline.html',
-  '/RVM/manifest.json'
+  './',
+  './index.html',
+  './offline.html',
+  './manifest.json'
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(CORE_ASSETS)).then(() => self.skipWaiting())
+    caches.open(CACHE).then(async c => {
+      // Cache each individually so one 404 doesn't kill the SW
+      for (const url of CORE_ASSETS) {
+        try { await c.add(url); } catch (err) { console.warn('SW: failed to cache', url, err); }
+      }
+    }).then(() => self.skipWaiting())
   );
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', e => {
-  // Don't cache Firebase realtime / Traccar API - always network
-  const url = new URL(e.request.url);
-  if (url.hostname.includes('firebaseio.com') || url.hostname.includes('firebasedatabase') || url.hostname.includes('traccar') || url.hostname.includes('token-transit')) {
-    return e.respondWith(
-      fetch(e.request).catch(() => {
-        // If it's a navigation request and Firebase fails, show offline page
-        if (e.request.mode === 'navigate') {
-          return caches.match('/RVM/offline.html');
-        }
-      })
-    );
+  const req = e.request;
+  const url = new URL(req.url);
+
+  // Never cache firebase / traccar live APIs
+  if (url.hostname.includes('firebaseio.com') || url.hostname.includes('firebasedatabase') || url.hostname.includes('firestore') || url.hostname.includes('traccar.org') || url.hostname.includes('token-transit')) {
+    return; // let browser handle it normally
   }
 
-  // For navigation (user opening app) - network first, fallback to offline.html
-  if (e.request.mode === 'navigate') {
+  // For page navigations - network first, fallback to offline.html, then to index
+  if (req.mode === 'navigate') {
     e.respondWith(
-      fetch(e.request).then(res => {
-        return caches.open(CACHE).then(c => {
-          c.put(e.request, res.clone());
+      fetch(req)
+        .then(res => {
+          // cache successful navigation
+          const copy = res.clone();
+          caches.open(CACHE).then(c => c.put(req, copy));
           return res;
-        });
-      }).catch(() => caches.match('/RVM/offline.html'))
+        })
+        .catch(async () => {
+          const cache = await caches.open(CACHE);
+          return (await cache.match('./offline.html')) || (await cache.match('./index.html')) || (await cache.match('/RVM/offline.html')) || (await cache.match('/RVM/index.html'));
+        })
     );
     return;
   }
 
-  // For everything else - stale while revalidate
+  // For CSS/JS/images - stale-while-revalidate
   e.respondWith(
-    caches.match(e.request).then(cached => {
-      const fetched = fetch(e.request).then(res => {
-        if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-        return res;
+    caches.match(req).then(cached => {
+      const fetchPromise = fetch(req).then(netRes => {
+        if (netRes && netRes.status === 200) {
+          const clone = netRes.clone();
+          caches.open(CACHE).then(c => c.put(req, clone));
+        }
+        return netRes;
       }).catch(() => cached);
-      return cached || fetched;
+      return cached || fetchPromise;
     })
   );
 });
