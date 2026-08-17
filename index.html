@@ -281,7 +281,11 @@ if ('serviceWorker' in navigator) {
         console.log('RVM PWA: SW registered', reg.scope);
         document.getElementById('fbStatus').textContent += ' | PWA Ready';
       })
-      .catch(err => console.log('RVM PWA: SW failed', err); const fb=document.getElementById('fbStatus'); if(fb) fb.textContent = 'SW failed: ' + err;);
+      .catch(err => {
+        console.log('RVM PWA: SW failed', err);
+        const fb=document.getElementById('fbStatus');
+        if(fb) fb.textContent = 'SW failed: ' + err;
+      });
   });
 }
 </script>
