@@ -6,22 +6,28 @@
     <title>Offline | River Valley Metro Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>body { background: #0f172a; color: white; font-family: sans-serif; }</style>
-
-  <link rel="manifest" href="/RVM/manifest.json">
-  <meta name="theme-color" content="#000000">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Metro Hub">
-  <link rel="apple-touch-icon" href="https://storage.googleapis.com/token-transit.appspot.com/m-D9SrnA2icgetpHoaoGGkYOoocD6_1Tb5mhqFDprLU--logo.rivervalleymetro.png">
-  <link rel="icon" type="image/png" href="https://storage.googleapis.com/token-transit.appspot.com/m-D9SrnA2icgetpHoaoGGkYOoocD6_1Tb5mhqFDprLU--logo.rivervalleymetro.png">
-
+    <link rel="manifest" href="/RVM/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Metro Hub">
+    <link rel="apple-touch-icon" href="https://storage.googleapis.com/token-transit.appspot.com/m-D9SrnA2icgetpHoaoGGkYOoocD6_1Tb5mhqFDprLU--logo.rivervalleymetro.png">
+    <link rel="icon" type="image/png" href="https://storage.googleapis.com/token-transit.appspot.com/m-D9SrnA2icgetpHoaoGGkYOoocD6_1Tb5mhqFDprLU--logo.rivervalleymetro.png">
 </head>
 <body class="flex items-center justify-center h-screen text-center p-6">
     <div class="bg-white/5 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/10 w-full max-w-sm">
         <div class="text-blue-500 text-5xl mb-4">📡</div>
         <h1 class="text-2xl font-black mb-2">You're Offline</h1>
-        <p class="text-white/60 text-sm mb-6">Check your connection to view live bus tracking.</p>
-        <button onclick="window.location.reload()" class="bg-white text-black font-bold py-3 px-8 rounded-full w-full">Try Again</button>
+        <p class="text-white/60 text-sm mb-6">Live bus tracking needs a connection, but your Midway schedule is still cached.</p>
+        <div class="flex flex-col gap-3">
+            <button onclick="window.location.reload()" class="bg-white text-black font-bold py-3 px-8 rounded-full w-full">Try Again</button>
+            <button onclick="window.location.href='/RVM/'" class="bg-white/10 text-white font-bold py-3 px-8 rounded-full w-full border border-white/10">View Cached Schedule</button>
+        </div>
+        <p class="text-white/30 text-[10px] mt-6 uppercase tracking-widest">RVM Passenger • Offline Mode</p>
     </div>
+    <script>
+      // Auto-retry when back online
+      window.addEventListener('online', () => window.location.reload());
+    </script>
 </body>
 </html>
