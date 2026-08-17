@@ -1,53 +1,40 @@
-const CACHE_NAME = 'rvm-hub-v3';
-const APP_SHELL = [
-  '/RVM/',
-  '/RVM/index.html',
-  '/RVM/manifest.json',
-  '/RVM/offline.html'
+const CACHE = 'rvm-v1';
+const CORE_ASSETS = [
+  './',
+  './index.html',
+  './manifest.json'
 ];
 
-self.addEventListener('install', event => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(APP_SHELL).catch(err => console.warn('Cache addAll failed', err));
-    })
+self.addEventListener('install', e => {
+  e.waitUntil(
+    caches.open(CACHE).then(c => c.addAll(CORE_ASSETS))
   );
   self.skipWaiting();
 });
 
-self.addEventListener('activate', event => {
-  event.waitUntil(
-    caches.keys().then(keys => {
-      return Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
+self.addEventListener('activate', e => {
+  e.waitUntil(
+    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
   );
   self.clients.claim();
 });
 
-self.addEventListener('fetch', event => {
-  if (event.request.method !== 'GET') return;
-  
-  event.respondWith(
-    fetch(event.request)
-      .then(response => {
-        // Optional: dynamically cache successful navigations or assets
-        return response;
-      })
-      .catch(() => {
-        return caches.match(event.request).then(cachedResponse => {
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-          if (event.request.mode === 'navigate') {
-            return caches.match('/RVM/offline.html');
-          }
-        });
-      })
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+
+  // Firebase / Traccar - network first, never cache fails
+  if (url.hostname.includes('firebase') || url.hostname.includes('traccar') || url.hostname.includes('corsproxy') || url.hostname.includes('allorigins')) {
+    return e.respondWith(fetch(e.request).catch(() => caches.match('./index.html')));
+  }
+
+  // Leaflet, Firebase CDN - stale while revalidate
+  e.respondWith(
+    caches.match(e.request).then(cached => {
+      const fetched = fetch(e.request).then(res => {
+        if (res.ok) caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+        return res;
+      }).catch(() => cached);
+      return cached || fetched;
+    })
   );
 });
