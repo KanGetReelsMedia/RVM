@@ -276,12 +276,12 @@ setInterval(updateMidwayUI,30000);
 // --- PWA: Service Worker Registration (Step 4) ---
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/RVM/sw.js')
+    navigator.serviceWorker.register('./sw.js', {scope: './'})
       .then(reg => {
         console.log('RVM PWA: SW registered', reg.scope);
         document.getElementById('fbStatus').textContent += ' | PWA Ready';
       })
-      .catch(err => console.log('RVM PWA: SW failed', err));
+      .catch(err => console.log('RVM PWA: SW failed', err); const fb=document.getElementById('fbStatus'); if(fb) fb.textContent = 'SW failed: ' + err;);
   });
 }
 </script>
