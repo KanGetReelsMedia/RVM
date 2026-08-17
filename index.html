@@ -2,8 +2,15 @@
 <html>
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RVM Passenger - Service Alerts Fix</title>
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="RVM Passenger">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -33,16 +40,12 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system;background:#111;hei
 .btn-dark{flex:1;height:42px;background:#161616;color:#fff;border:1px solid #333;border-radius:8px;font-weight:600;font-size:13px;cursor:pointer}
 .content-overlay{position:absolute;inset:0;background:#000;z-index:400;overflow-y:auto;display:none;color:white;padding:16px;padding-bottom:40px}
 .content-overlay::-webkit-scrollbar { display: none; }
-
-/* Clean Midway Layout Styles */
 .midway-header { text-align: center; padding: 10px 0 20px 0; }
 .midway-header h1 { font-size: 18px; font-weight: 900; letter-spacing: 0.05em; text-transform: uppercase; color: #fff; }
 .midway-header p { font-size: 10px; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.25em; margin-top: 2px; }
-
 .clean-card { background: #0a0a0a; border: 1px solid #222; border-radius: 20px; padding: 20px; margin-bottom: 16px; }
 .service-badge { display: inline-block; background: rgba(56, 189, 248, 0.1); color: #38bdf8; font-size: 9px; font-weight: 800; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(56, 189, 248, 0.2); margin-bottom: 8px; }
 .section-title { font-size: 16px; font-weight: 800; color: #fff; margin-bottom: 16px; text-align: center; }
-
 .bus-row { background: #121212; border: 1px solid #222; border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 10px; }
 .bus-row.active-row { background: linear-gradient(135deg, rgba(37,99,235,0.2) 0%, rgba(15,23,42,0.6) 100%); border-color: rgba(56,189,248,0.4); }
 .bus-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.15em; color: #888; margin-bottom: 6px; }
@@ -53,26 +56,20 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system;background:#111;hei
 
 <div class="phone">
   <div class="notch"></div>
-
-  <!-- PILLS -->
   <div class="pills">
     <button class="pill active" id="pill-live" onclick="switchPill('live')">Live Map</button>
     <button class="pill" id="pill-midway" onclick="switchPill('midway')">Midway</button>
     <button class="pill" id="pill-status" onclick="switchPill('status')">Status <span id="statusCount" style="display:none;background:#ef4444;color:#fff;padding:1px 5px;border-radius:8px;font-size:9px;margin-left:4px">0</span></button>
   </div>
-
-  <!-- SEARCH BAR -->
   <div id="searchBar" class="search-bar">
     <button class="icon-btn" onclick="toggleDevices()">☰</button>
     <div class="search-box">
       <span style="color:#666">🔍</span>
       <input id="searchInput" placeholder="Search Devices" oninput="filterBuses()">
     </div>
-    <button class="icon-btn">⚙️</button>
+    <button class="icon-btn">⚙</button>
     <button class="icon-btn" onclick="addDevice()">+</button>
   </div>
-
-  <!-- MAP -->
   <div class="map-wrap" id="mapWrap">
     <div id="map"></div>
     <div class="map-controls">
@@ -90,14 +87,11 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system;background:#111;hei
       <button class="btn-dark" onclick="refreshFleet()">Refresh Map</button>
     </div>
   </div>
-
-  <!-- CLEAN MIDWAY TAB -->
   <div id="overlay-midway" class="content-overlay">
     <div class="midway-header">
       <h1>River Valley Metro</h1>
       <p>Midway Commuter</p>
     </div>
-
     <div class="clean-card">
       <div style="text-align: center;">
         <span id="dayTitle" class="service-badge">Weekday Service</span>
@@ -105,7 +99,6 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system;background:#111;hei
       </div>
       <div id="busButtons"></div>
     </div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
       <a href="tel:8159374287" class="clean-card" style="margin-bottom:0;text-align:center;text-decoration:none;display:block;padding:16px;">
         <div style="font-size:9px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:4px;">Support</div>
@@ -116,7 +109,6 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system;background:#111;hei
         <div id="midwayStatusText" style="font-size:13px;font-weight:800;color:#4ade80;">Active</div>
       </div>
     </div>
-
     <div class="clean-card">
       <div style="font-size:9px;font-weight:800;color:#666;text-align:center;text-transform:uppercase;letter-spacing:0.15em;margin-bottom:10px;">Boarding Area Feed</div>
       <div style="border-radius:12px;overflow:hidden;background:#000;border:1px solid #222;">
@@ -126,8 +118,6 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system;background:#111;hei
       </div>
     </div>
   </div>
-
-  <!-- STATUS TAB -->
   <div id="overlay-status" class="content-overlay" style="background:#0a0a0a;padding:16px;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
       <b style="font-size:15px;color:#fff">Service Alerts & ETA</b>
@@ -149,12 +139,10 @@ function initMap(){
   map=L.map('map',{zoomControl:false,attributionControl:false}).setView([41.122,-87.86],14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
 }
-
 async function fetchWithProxy(url){
   const proxies=[`https://corsproxy.io/?${encodeURIComponent(url)}`,`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,url];
   for(const p of proxies){try{const r=await fetch(p);if(!r.ok)continue;const j=await r.json();if(j)return j;}catch(e){}}return null;
 }
-
 async function refreshFleet(){
   const devices=await fetchWithProxy(`https://server.traccar.org/api/devices?token=${TOKEN}`);
   const positions=await fetchWithProxy(`https://server.traccar.org/api/positions?token=${TOKEN}`);
@@ -164,7 +152,6 @@ async function refreshFleet(){
     updateMap();
   }
 }
-
 function updateMap(){
   Object.values(markers).forEach(m=>{try{map.removeLayer(m);}catch(e){}});markers={};
   const filtered=realDevices.filter(d=>d.name.toLowerCase().includes(searchFilter.toLowerCase()));
@@ -177,36 +164,28 @@ function updateMap(){
   });
   if(filtered.length>0){try{const g=new L.featureGroup(Object.values(markers));map.fitBounds(g.getBounds().pad(0.2));}catch(e){}}
 }
-
-// Midway Schedule Data
 const weekdaySchedule=[{b:"4:45 AM",m:"6:00 AM"},{b:"6:00 AM",m:"7:15 AM"},{b:"7:25 AM",m:"8:45 AM"},{b:"8:45 AM",m:"10:05 AM"},{b:"10:15 AM",m:"11:35 AM"},{b:"11:35 AM",m:"12:55 PM"},{b:"1:25 PM",m:"2:45 PM"},{b:"3:05 PM",m:"4:25 PM"},{b:"4:15 PM",m:"5:35 PM"},{b:"5:50 PM",m:"7:05 PM"},{b:"7:05 PM",m:"8:20 PM"}];
 const saturdaySchedule=[{b:"7:00 AM",m:"8:15 AM"},{b:"9:40 AM",m:"11:00 AM"},{b:"12:30 PM",m:"1:50 PM"},{b:"4:20 PM",m:"5:40 PM"},{b:"7:05 PM",m:"8:20 PM"}];
 const sundaySchedule=[{b:"8:00 AM",m:"9:15 AM"},{b:"10:35 AM",m:"11:55 AM"},{b:"1:20 PM",m:"2:40 PM"},{b:"4:05 PM",m:"5:25 PM"}];
-
 function parseTime(t){if(!t)return 0;let [time,mod]=t.split(" ");let [h,m]=time.split(":").map(Number);if(mod==="PM"&&h!==12)h+=12;if(mod==="AM"&&h===12)h=0;return h*60+m;}
-
 function getDirectionDisplay(schedule,key,currentTime){
   const activeBus=schedule.find(bus=>{const st=parseTime(bus[key]);return currentTime>=st&&currentTime<(st+75);});
   if(activeBus)return `<div style="color:#38bdf8;font-size:10px;font-weight:900;letter-spacing:0.05em;margin-bottom:4px">● LIVE NOW</div><div style="font-size:18px;font-weight:900;color:#fff">${activeBus[key]}</div>`;
   const nextBus=schedule.find(bus=>parseTime(bus[key])>currentTime);
   return nextBus?`<div style="font-size:9px;color:#888;margin-bottom:2px;font-weight:700">NEXT DEPARTURE</div><div style="font-size:16px;font-weight:800;color:#fff">${nextBus[key]}</div>`:`<div style="font-size:12px;color:#666;font-weight:700">FINISHED FOR TODAY</div>`;
 }
-
 function updateMidwayUI(){
   const now=new Date();const cur=now.getHours()*60+now.getMinutes();const d=now.getDay();
   let schedule=weekdaySchedule,title="Weekday Service";
   if(d===0){schedule=sundaySchedule;title="Sunday Service";}
   else if(d===6){schedule=saturdaySchedule;title="Saturday Service";}
-
   const dayTitleEl=document.getElementById('dayTitle');if(dayTitleEl)dayTitleEl.textContent=title;
   const northText=getDirectionDisplay(schedule,'b',cur);
   const southText=getDirectionDisplay(schedule,'m',cur);
-  
   const lastDep=parseTime(schedule[schedule.length-1].m)+75;
   const sysActive=cur<lastDep;
   const statusText=document.getElementById('midwayStatusText');
   if(statusText&&!sysActive){statusText.style.color="#ef4444";statusText.textContent="Offline";}
-
   const busButtonsEl=document.getElementById('busButtons');
   if(busButtonsEl){
     busButtonsEl.innerHTML=`
@@ -221,11 +200,9 @@ function updateMidwayUI(){
     `;
   }
 }
-
 function renderStatus(){
   const el=document.getElementById('statusAlerts');
   if(!el)return;
-
   let allAlerts=[];
   const processSource=(data)=>{
     if(!data)return;
@@ -241,21 +218,17 @@ function renderStatus(){
       });
     }
   };
-
   processSource(liveAlerts);
   processSource(firebaseAlertsNode);
   processSource(firebaseNoticesNode);
-
   const validAlerts=allAlerts.filter(a=>{
     return a&&(a.statusLabel||a.message||a.text||a.notice||a.title||a.description||a.alert||typeof a==='string');
   }).sort((a,b)=>(b.timestamp||b.time||0)-(a.timestamp||a.time||0));
-
   const countEl=document.getElementById('statusCount');
   if(countEl){
     countEl.textContent=validAlerts.length;
     countEl.style.display=validAlerts.length>0?'inline-block':'none';
   }
-
   if(validAlerts.length===0){
     el.innerHTML='<div style="padding:30px;text-align:center;color:#888;font-size:13px;background:#161616;border-radius:12px;border:1px solid #333">No status alerts — all buses normal</div>';
   } else {
@@ -274,13 +247,11 @@ function renderStatus(){
     }).join('');
   }
 }
-
 function listenFirebase(){
   db.ref('live').on('value',snap=>{liveAlerts=snap.val()||{};document.getElementById('fbStatus').textContent=`✅ Connected live`;renderStatus();});
   db.ref('alerts').on('value',snap=>{firebaseAlertsNode=snap.val()||{};renderStatus();});
   db.ref('notices').on('value',snap=>{firebaseNoticesNode=snap.val()||{};renderStatus();});
 }
-
 function switchPill(which){
   document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
   document.getElementById('pill-'+which).classList.add('active');
@@ -291,7 +262,6 @@ function switchPill(which){
   if(which==='midway')updateMidwayUI();
   if(which==='live')setTimeout(()=>map&&map.invalidateSize(),100);
 }
-
 window.filterBuses=()=>{searchFilter=document.getElementById('searchInput').value;updateMap();};
 window.openTraccar=()=>window.open(TRACCAR_LINK,'_blank');
 window.refreshFleet=refreshFleet;
@@ -302,6 +272,18 @@ window.locateMe=()=>{if(navigator.geolocation){navigator.geolocation.getCurrentP
 initMap();listenFirebase();refreshFleet();updateMidwayUI();
 setInterval(refreshFleet,30000);
 setInterval(updateMidwayUI,30000);
+
+// --- PWA: Service Worker Registration (Step 4) ---
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        console.log('RVM PWA: SW registered', reg.scope);
+        document.getElementById('fbStatus').textContent += ' | PWA Ready';
+      })
+      .catch(err => console.log('RVM PWA: SW failed', err));
+  });
+}
 </script>
 </body>
 </html>
