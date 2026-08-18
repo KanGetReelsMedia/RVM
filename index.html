@@ -129,8 +129,8 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system;background:#111;hei
 </div>
 
 <script>
-const TRACCAR_LINK="https://server.traccar.org?token=RzBFAiEAvK9mHIvzF7SucL-6Rk5n7anMbMAPk0obpmIvIBkUUa0CIHyEkKfKrScjLCy_i8xu-vjzePpT_XP8MdrFfmJdqfNJeyJpIjo5MDIyNDQ1MjA4NDE0OTQ3MDEsInUiOjQzMjAsImUiOiIyMDQ5LTA4LTI0VDExOjE4OjAwLjAwMCswMDowMCJ9";
-const TOKEN="RzBFAiEAvK9mHIvzF7SucL-6Rk5n7anMbMAPk0obpmIvIBkUUa0CIHyEkKfKrScjLCy_i8xu-vjzePpT_XP8MdrFfmJdqfNJeyJpIjo5MDIyNDQ1MjA4NDE0OTQ3MDEsInUiOjQzMjAsImUiOiIyMDQ5LTA4LTI0VDExOjE4OjAwLjAwMCswMDowMCJ9";
+const TRACCAR_WEB_URL="https://server.traccar.org";
+const FLEET_API="/api/fleet";
 const firebaseConfig={apiKey:"AIzaSyCRDkusyC05EzBiT8ZBj8JpZd8E5qVd-4g",authDomain:"rvm-software-manifest.firebaseapp.com",databaseURL:"https://rvm-software-manifest-default-rtdb.firebaseio.com",projectId:"rvm-software-manifest",storageBucket:"rvm-software-manifest.firebasestorage.app",messagingSenderId:"246377591660",appId:"1:246377591660:web:459adf1087bd84ca36b949"};
 firebase.initializeApp(firebaseConfig);const db=firebase.database();
 let map,markers={},realDevices=[],realPositions={},liveAlerts={},firebaseAlertsNode={},firebaseNoticesNode={},searchFilter='';
@@ -139,17 +139,19 @@ function initMap(){
   map=L.map('map',{zoomControl:false,attributionControl:false}).setView([41.122,-87.86],14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
 }
-async function fetchWithProxy(url){
-  const proxies=[`https://corsproxy.io/?${encodeURIComponent(url)}`,`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,url];
-  for(const p of proxies){try{const r=await fetch(p);if(!r.ok)continue;const j=await r.json();if(j)return j;}catch(e){}}return null;
-}
 async function refreshFleet(){
-  const devices=await fetchWithProxy(`https://server.traccar.org/api/devices?token=${TOKEN}`);
-  const positions=await fetchWithProxy(`https://server.traccar.org/api/positions?token=${TOKEN}`);
-  if(devices&&Array.isArray(devices)){
-    realDevices=devices;realPositions={};
-    if(positions&&Array.isArray(positions)){positions.forEach(p=>{realPositions[p.deviceId]=p;});}
+  try{
+    const res=await fetch(FLEET_API);
+    if(!res.ok) throw new Error('fleet api failed');
+    const {devices,positions}=await res.json();
+    realDevices=Array.isArray(devices)?devices:[];
+    realPositions={};
+    if(Array.isArray(positions)){positions.forEach(p=>{realPositions[p.deviceId]=p;});}
     updateMap();
+    document.getElementById('fbStatus').textContent='✅ Live Fleet Synced (Secure)';
+  }catch(e){
+    console.error(e);
+    document.getElementById('fbStatus').textContent='Fleet sync error - check Vercel env TRACCAR_TOKEN';
   }
 }
 function updateMap(){
@@ -263,7 +265,7 @@ function switchPill(which){
   if(which==='live')setTimeout(()=>map&&map.invalidateSize(),100);
 }
 window.filterBuses=()=>{searchFilter=document.getElementById('searchInput').value;updateMap();};
-window.openTraccar=()=>window.open(TRACCAR_LINK,'_blank');
+window.openTraccar=()=>window.open(TRACCAR_WEB_URL,'_blank');
 window.refreshFleet=refreshFleet;
 window.toggleDevices=()=>{alert('Devices:\n'+realDevices.map(d=>d.name).join('\n'));};
 window.addDevice=()=>openTraccar();
@@ -273,18 +275,17 @@ initMap();listenFirebase();refreshFleet();updateMidwayUI();
 setInterval(refreshFleet,30000);
 setInterval(updateMidwayUI,30000);
 
-// --- PWA: Service Worker Registration (Step 4) ---
+// PWA: Service Worker Registration
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js', {scope: './'})
       .then(reg => {
         console.log('RVM PWA: SW registered', reg.scope);
-        document.getElementById('fbStatus').textContent += ' | PWA Ready';
+        const fb=document.getElementById('fbStatus');
+        if(fb) fb.textContent += ' | PWA Ready';
       })
       .catch(err => {
         console.log('RVM PWA: SW failed', err);
-        const fb=document.getElementById('fbStatus');
-        if(fb) fb.textContent = 'SW failed: ' + err;
       });
   });
 }
